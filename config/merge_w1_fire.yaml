@@ -1,0 +1,35 @@
+# W1 烟火微调合并配置
+#
+# - 烟火 / COCO：各自把源 split 合成一池后，按 split_ratios 默认 7:2:1
+#   无重叠划分为 train/val/test（合并后 test 可评底座 + 烟火）
+# - COCO 用 extra_roots 把 train2017 + val2017 合成一池
+#
+# 用法：
+#   python datasets/scripts/merge_yolo_sets.py \
+#     --config config/merge_w1_fire.yaml \
+#     --out /media/.../patrol_perception/datasets/detect_w1_fire
+
+version: 1
+
+names:
+  - person
+  - bicycle
+  - car
+  - truck
+  - smoke
+  - flame
+
+sets:
+  - root: /media/sribd/C02E01372E01284C/patrol_perception/datasets/downloads/fog_fire_yolo
+    prefix: fire
+    keep: [flame, smoke]
+    # 源集虽有 train/val/test，仍合成一池后重划分为 7:2:1
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+  - root: /media/sribd/C02E01372E01284C/patrol_perception/datasets/downloads/coco_train2017
+    extra_roots:
+      - /media/sribd/C02E01372E01284C/patrol_perception/datasets/downloads/coco_val2017
+    prefix: coco
+    keep: [person, bicycle, car, truck]
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0

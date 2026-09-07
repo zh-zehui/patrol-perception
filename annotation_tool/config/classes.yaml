@@ -1,0 +1,26 @@
+# IDs and names are frozen to match detect_w2. Colors are UI-only and never
+# written to YOLO labels. Prompts are reserved for the optional auto-labeler.
+classes:
+  - {id: 0, name: person, color: "#22C55E", prompts: [person, pedestrian]}
+  # Keep bicycle and ebike prompts visually exclusive.  In particular, a
+  # pedal bicycle should show a crank/pedals and chain; a step-through scooter
+  # should not be labelled as a bicycle merely because it has two wheels.
+  - {id: 1, name: bicycle, color: "#3B82F6", prompts: ["pedal bicycle", "bicycle with visible pedals and crank", "bicycle with chain and diamond frame", "traditional non-electric bicycle"]}
+  - {id: 2, name: car, color: "#06B6D4", prompts: [car, passenger car]}
+  - {id: 3, name: truck, color: "#1D4ED8", prompts: [truck, lorry]}
+  # Fire-smoke prompts are intentionally broad: smoke has weak/soft boundaries,
+  # so requiring a specific color or shape would reduce recall.
+  - {id: 4, name: smoke, color: "#6B7280", prompts: ["smoke", "fire smoke", "smoke plume", "thick smoke", "black smoke", "white smoke", "gray smoke", "smoke cloud from a fire"]}
+  - {id: 5, name: flame, color: "#EF4444", prompts: [flame, visible fire]}
+  # In this project, ebike means the Chinese-style seated electric scooter/moped
+  # commonly sold as 电瓶车, not a Western pedal-assist bicycle.  These prompts
+  # were selected against e-bike_yolo test images; generic "e-bike" and
+  # "electric bicycle" prompts performed poorly for this visual category.
+  - {id: 6, name: ebike, color: "#8B5CF6", prompts: ["motor scooter", "electric scooter", "seated electric two-wheeler viewed from behind", "side view of a seated electric two-wheeler", "electric bicycle with pedals", "electric moped", "step-through electric scooter"]}
+  - {id: 7, name: litter_bottle, color: "#EAB308", prompts: [discarded bottle, bottle litter]}
+  - {id: 8, name: litter_plastic_bag, color: "#F97316", prompts: [discarded plastic bag, plastic bag litter]}
+  - {id: 9, name: litter_paper, color: "#92400E", prompts: [discarded paper, paper litter]}
+  - {id: 10, name: litter_cardboard, color: "#A16207", prompts: [discarded cardboard, cardboard litter]}
+  - {id: 11, name: fishing_rod, color: "#EC4899", prompts: [fishing rod, fishing pole]}
+  - {id: 12, name: cigarette_or_smoke, color: "#F8FAFC", prompts: [cigarette, lit cigarette]}
+  - {id: 13, name: pet, color: "#D946EF", prompts: [cat, dog, pet cat, pet dog]}

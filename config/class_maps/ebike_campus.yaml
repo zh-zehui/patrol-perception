@@ -1,0 +1,27 @@
+# Ultralytics Platform claus-miller/datasets → 联合训练用
+# 源 names: ebike, car, person, bicycle, sign
+# 保留与工程重合的类；丢弃 sign（工程无此类）
+#
+# 用法：
+#   python datasets/scripts/download_from_sources.py --classes ebike \
+#     --data-root /media/.../patrol_perception --ndjson ~/Downloads/datasets.ndjson
+#   python datasets/scripts/remap_yolo_set.py \
+#     --src <.../ebike_hub/datasets-*> \
+#     --out <.../ebike_yolo> \
+#     --map config/class_maps/ebike_campus.yaml
+
+version: 1
+
+# 本子集 data.yaml 内的局部 id（合并进 detect_v1 时会再对齐 classes.yaml）
+target_names:
+  - person
+  - bicycle
+  - ebike
+  - car
+
+map:
+  person: person
+  bicycle: bicycle
+  ebike: ebike
+  car: car
+  # sign: （丢弃）

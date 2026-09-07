@@ -1,0 +1,16 @@
+# COCO cat / dog → 工程类 pet（不再细分）
+#
+# 用法：
+#   python datasets/scripts/remap_yolo_set.py \
+#     --src .../coco_train2017 \
+#     --out .../coco_pet_train_yolo \
+#     --map config/class_maps/coco_cat_dog_to_pet.yaml
+
+version: 1
+
+target_names:
+  - pet
+
+map:
+  cat: pet
+  dog: pet

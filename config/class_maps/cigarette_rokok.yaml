@@ -1,0 +1,16 @@
+# Roboflow cigarette.v1i → 本工程 cigarette_or_smoke
+# 源 names: rokok（印尼语：香烟）
+#
+# 用法：
+#   python datasets/scripts/remap_yolo_set.py \
+#     --src .../cigarette.v1i.yolo26 \
+#     --out .../cigarette_v1i_yolo \
+#     --map config/class_maps/cigarette_rokok.yaml
+
+version: 1
+
+target_names:
+  - cigarette_or_smoke
+
+map:
+  rokok: cigarette_or_smoke

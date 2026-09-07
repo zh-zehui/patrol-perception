@@ -1,0 +1,479 @@
+# 训练数据目录与网上链接（按检测类）
+#
+# 约定：
+# - 网上公开集：必须写 url（可多条）；下载后落到 local_dir
+# - 自制集：写 dir（可多条）；enabled 选择是否并入；可用 CLI 覆盖目录
+# - 同一类可同时启用 public + self（混合训练）
+#
+# ## coco_exact 类（person/bicycle/car/truck/traffic_light）
+# pet 由 COCO cat+dog 合并（coco_approx）
+# - W0 仅推理：用 yolo26s.pt，不必下 COCO
+# - 联合微调防遗忘：底座类 person/bicycle/car/truck 的 public 已 enabled
+#   下载脚本按 url+local_dir 去重；--coco-variant val2017 → coco_val2017
+#   --coco-variant train2017 → 自动改落到 coco_train2017（不覆盖 val）
+# - 默认 --coco-variant val2017（~5k 图）；补样本用 train2017（~118k / ~18GB）
+# - 冒烟可用 coco128（旧目录 datasets/downloads/coco）
+#
+# CLI：
+#   PYTHONPATH=src python datasets/scripts/download_from_sources.py
+#   PYTHONPATH=src python datasets/scripts/download_from_sources.py --classes person,bicycle,car,truck
+#   PYTHONPATH=src python datasets/scripts/download_from_sources.py --coco-variant val2017
+#   PYTHONPATH=src python datasets/scripts/download_from_sources.py --coco-variant coco128
+#   # 数据落到外置硬盘（推荐改 roots.data_root，或用环境变量 / CLI）：
+#   # export PATROL_DATA_ROOT=/mnt/your_hdd/patrol_data
+#   # PYTHONPATH=src python datasets/scripts/download_from_sources.py --data-root /mnt/your_hdd/patrol_data
+
+version: 1
+
+roots:
+  # 数据根：相对路径相对工程根；写绝对路径可指向外置硬盘。
+  # 解析规则：相对 local_dir / self.dir = data_root + 相对路径；已是绝对路径则不再拼接。
+  # 优先级：CLI --data-root > 环境变量 PATROL_DATA_ROOT > 本字段 > 工程根
+  # 例：data_root: /mnt/data_hdd/patrol_perception
+  #     local_dir: datasets/downloads/coco_val2017
+  #  → /mnt/data_hdd/patrol_perception/datasets/downloads/coco
+  # data_root: /mnt/data_hdd/patrol_perception
+  downloads: datasets/downloads          # 网上集原始下载（相对 data_root）
+  self_default: datasets/self            # 自制集默认父目录
+  merged: datasets/detect_v1             # 合并后给 Ultralytics 的 YOLO 布局
+
+# 每类：public[] 必须有 url；self[] 必须有 dir（可先占位，enabled: false）
+classes:
+  person:
+    public:
+      - name: COCO person（防遗忘回放；与 bicycle/car/truck 共用一份下载）
+        url: https://docs.ultralytics.com/datasets/detect/coco/
+        local_dir: datasets/downloads/coco_val2017
+        enabled: true
+        kind: coco
+    self:
+      - name: 巡逻视角-人（域适应时再开）
+        dir: datasets/self/person
+        enabled: false
+
+  bicycle:
+    public:
+      - name: COCO bicycle（防遗忘回放；共用 datasets/downloads/coco）
+        url: https://docs.ultralytics.com/datasets/detect/coco/
+        local_dir: datasets/downloads/coco_val2017
+        enabled: true
+        kind: coco
+    self:
+      - name: 巡逻视角-自行车
+        dir: datasets/self/bicycle
+        enabled: false
+
+  ebike:
+    public:
+      # 源头：Ultralytics Platform（街景含 ebike/car/person/bicycle/sign）。
+      # Clone/导出 datasets.ndjson 后：
+      #   python datasets/scripts/download_from_sources.py --classes ebike \
+      #     --data-root /media/sribd/C02E01372E01284C/patrol_perception \
+      #     --ndjson ~/Downloads/datasets.ndjson
+      # 再映射（联合训：保留 person/bicycle/ebike/car，丢 sign）：
+      #   python datasets/scripts/remap_yolo_set.py \
+      #     --src <.../ebike_hub/datasets-*> \
+      #     --out <.../ebike_yolo> \
+      #     --map config/class_maps/ebike_campus.yaml
+      - name: Ultralytics Platform campus traffic（含 ebike）
+        url: https://platform.ultralytics.com/claus-miller/datasets/datasets
+        local_dir: datasets/downloads/ebike_hub
+        enabled: true
+        kind: ndjson
+        ndjson: ~/Downloads/datasets.ndjson
+        note: 源类 ebike/car/person/bicycle/sign；remap 保留 person/bicycle/ebike/car，丢弃 sign（联合训练）
+      - name: Roboflow Universe 搜 electric scooter / ebike（备用）
+        url: https://universe.roboflow.com/search?q=electric%20scooter%20object%20detection
+        local_dir: datasets/downloads/ebike_roboflow
+        enabled: false
+        kind: page
+    self:
+      - name: 巡逻视角-电瓶车
+        dir: datasets/self/ebike
+        enabled: false
+
+  car:
+    public:
+      - name: COCO car（防遗忘回放；共用 datasets/downloads/coco）
+        url: https://docs.ultralytics.com/datasets/detect/coco/
+        local_dir: datasets/downloads/coco_val2017
+        enabled: true
+        kind: coco
+    self:
+      - name: 巡逻视角-轿车
+        dir: datasets/self/car
+        enabled: false
+
+  truck:
+    public:
+      - name: COCO truck（防遗忘回放；共用 datasets/downloads/coco）
+        url: https://docs.ultralytics.com/datasets/detect/coco/
+        local_dir: datasets/downloads/coco_val2017
+        enabled: true
+        kind: coco
+    self:
+      - name: 巡逻视角-货车
+        dir: datasets/self/truck
+        enabled: false
+
+  pet:
+    public:
+      - name: COCO cat+dog（remap 为 pet；备案）
+        url: https://docs.ultralytics.com/datasets/detect/coco/
+        local_dir: datasets/downloads/coco_val2017
+        enabled: false
+    self:
+      - name: 巡逻视角-宠物
+        dir: datasets/self/pet
+        enabled: false
+
+  smoke:
+    public:
+      - name: HuggingFace fog_fire_detection（Fire/Smoke）
+        url: https://huggingface.co/datasets/jojomoi-meme/fog_fire_detection
+        local_dir: datasets/downloads/fog_fire_detection
+        enabled: true
+        kind: huggingface
+        note: |
+          下载后 YOLO 在 local_dir/dataset（names: Fire/Smoke）。接入前映射：
+            python datasets/scripts/remap_yolo_set.py \
+              --src <.../fog_fire_detection/dataset> \
+              --out <.../fog_fire_yolo> \
+              --map config/class_maps/fire_smoke.yaml
+      - name: Roboflow fire-smoke 示例集
+        url: https://universe.roboflow.com/data2/fire-smoke-detection-ua3dm
+        local_dir: datasets/downloads/fire_smoke_roboflow
+        enabled: false
+    self:
+      - name: 巡逻视角-烟雾
+        dir: datasets/self/smoke
+        enabled: false
+
+  flame:
+    public:
+      - name: 与 smoke 同源（Fire 类映射为 flame）
+        url: https://huggingface.co/datasets/jojomoi-meme/fog_fire_detection
+        local_dir: datasets/downloads/fog_fire_detection
+        enabled: true
+        kind: huggingface
+        note: 与 smoke 共用 fog_fire_yolo（Fire→flame, Smoke→smoke）
+    self:
+      - name: 巡逻视角-明火
+        dir: datasets/self/flame
+        enabled: false
+
+  cigarette_or_smoke:
+    public:
+      # 源头备案：Roboflow Universe。导出：Clone→Ultralytics Platform 下 .ndjson → 本脚本 kind=ndjson 转 YOLO。
+      # 例：
+      #   python datasets/scripts/download_from_sources.py --classes cigarette_or_smoke \
+      #     --data-root /media/sribd/C02E01372E01284C/patrol_perception \
+      #     --ndjson ~/Downloads/cigarette.ndjson
+      - name: Roboflow Cigarette（face+cigarette，liu-xianglei）
+        url: https://universe.roboflow.com/liu-xianglei/cigarette
+        local_dir: datasets/downloads/cigarette_roboflow
+        enabled: true
+        kind: ndjson
+        ndjson: ~/Downloads/cigarette.ndjson
+        note: |
+          转换后目录 cigarette-*/data.yaml 含 cigarette/face/smoking。
+          接入工程前过滤：
+            python datasets/scripts/remap_yolo_set.py \
+              --src <.../cigarette-1ae390b5> \
+              --out <.../cigarette_yolo> \
+              --map config/class_maps/cigarette_face.yaml
+          只保留 cigarette→cigarette_or_smoke。
+    self:
+      - name: 巡逻视角-香烟
+        dir: datasets/self/cigarette_or_smoke
+        enabled: false
+
+  litter_bottle:
+    public:
+      - name: COCO bottle（备案；W0 用预训练映射即可，默认不下完整 COCO）
+        url: https://docs.ultralytics.com/datasets/detect/coco/
+        local_dir: datasets/downloads/coco_val2017
+        enabled: false
+      # clone GitHub + 按 annotations.json 从 Flickr 拉图；四类 litter_* 共用一份
+      - name: TACO（pedropro/TACO）
+        url: https://github.com/pedropro/TACO
+        local_dir: datasets/downloads/taco
+        enabled: true
+        kind: taco
+        note: 官网介绍页见 tacodataset.org。转换：python datasets/scripts/taco_to_yolo.py --taco-root <local_dir> --out <.../taco_yolo> --map config/class_maps/taco_litter.yaml
+    self:
+      - name: 巡逻视角-水瓶垃圾
+        dir: datasets/self/litter_bottle
+        enabled: false
+
+  litter_plastic_bag:
+    public:
+      - name: TACO（与 litter_bottle 共用下载）
+        url: https://github.com/pedropro/TACO
+        local_dir: datasets/downloads/taco
+        enabled: true
+        kind: taco
+    self:
+      - name: 巡逻视角-塑料袋
+        dir: datasets/self/litter_plastic_bag
+        enabled: false
+
+  litter_paper:
+    public:
+      - name: TACO（与 litter_bottle 共用下载）
+        url: https://github.com/pedropro/TACO
+        local_dir: datasets/downloads/taco
+        enabled: true
+        kind: taco
+    self:
+      - name: 巡逻视角-废纸
+        dir: datasets/self/litter_paper
+        enabled: false
+
+  litter_cardboard:
+    public:
+      - name: TACO（与 litter_bottle 共用下载）
+        url: https://github.com/pedropro/TACO
+        local_dir: datasets/downloads/taco
+        enabled: true
+        kind: taco
+    self:
+      - name: 巡逻视角-纸箱
+        dir: datasets/self/litter_cardboard
+        enabled: false
+
+  fishing_rod:
+    public:
+      # 源头：Roboflow fishing_recognition → Clone 到 Platform 后下 ndjson。
+      #   https://platform.ultralytics.com/kallyas-oreo/datasets/fishing
+      #   python datasets/scripts/download_from_sources.py --classes fishing_rod \
+      #     --data-root /media/sribd/C02E01372E01284C/patrol_perception \
+      #     --ndjson ~/Downloads/fishing.ndjson
+      # 再映射 fishing → fishing_rod：
+      #   python datasets/scripts/remap_yolo_set.py \
+      #     --src <.../fishing_recognition/fishing-*> \
+      #     --out <.../fishing_yolo> \
+      #     --map config/class_maps/fishing_rod.yaml
+      - name: Ultralytics Platform Fishing（kallyas-oreo）
+        url: https://platform.ultralytics.com/kallyas-oreo/datasets/fishing
+        local_dir: datasets/downloads/fishing_recognition
+        enabled: true
+        kind: ndjson
+        ndjson: ~/Downloads/fishing.ndjson
+        note: 源类 fishing；remap → fishing_rod
+      - name: Roboflow Universe fishing_recognition（备案）
+        url: https://universe.roboflow.com/huihe/fishing_recognition
+        local_dir: datasets/downloads/fishing_recognition_roboflow
+        enabled: false
+        kind: page
+    self:
+      - name: 巡逻视角-钓竿
+        dir: datasets/self/fishing_rod
+        enabled: false
+
+  leash:
+    public:
+      - name: （暂无稳定公开集；有则在此补 url）
+        url: ""
+        local_dir: datasets/downloads/leash
+        enabled: false
+    self:
+      - name: 巡逻视角-狗绳
+        dir: datasets/self/leash
+        enabled: false
+
+  cone_or_barrier:
+    public:
+      - name: Roboflow traffic cone（搜后选定项目，替换为具体 URL）
+        url: https://universe.roboflow.com/search?q=traffic%20cone
+        local_dir: datasets/downloads/cone_roboflow
+        enabled: true
+      - name: BDD100K（含部分道路相关标注，按需裁类）
+        url: https://bdd-data.berkeley.edu/
+        local_dir: datasets/downloads/bdd100k
+        enabled: false
+    self:
+      - name: 巡逻视角-锥桶路障
+        dir: datasets/self/cone_or_barrier
+        enabled: false
+
+  license_plate:
+    public:
+      - name: CCPD（中国车牌检测常用）
+        url: https://github.com/detectRecog/CCPD
+        local_dir: datasets/downloads/ccpd
+        enabled: true
+    self:
+      - name: 巡逻视角-车牌
+        dir: datasets/self/license_plate
+        enabled: false
+
+  traffic_light:
+    public:
+      - name: COCO traffic light（备案；默认不下）
+        url: https://docs.ultralytics.com/datasets/detect/coco/
+        local_dir: datasets/downloads/coco_val2017
+        enabled: false
+    self:
+      - name: 巡逻视角-信号灯
+        dir: datasets/self/traffic_light
+        enabled: false
+
+  cart_or_box:
+    public:
+      - name: COCO suitcase 等近似（需映射策略）
+        url: https://docs.ultralytics.com/datasets/detect/coco/
+        local_dir: datasets/downloads/coco_val2017
+        enabled: true
+      - name: Roboflow cart/box（选定项目后填具体 URL）
+        url: https://universe.roboflow.com/search?q=shopping%20cart
+        local_dir: datasets/downloads/cart_box
+        enabled: false
+    self:
+      - name: 巡逻视角-推车箱包
+        dir: datasets/self/cart_or_box
+        enabled: false
+
+  trash_bin:
+    public:
+      - name: Roboflow trash bin（选定项目后填具体 URL）
+        url: https://universe.roboflow.com/search?q=trash%20bin
+        local_dir: datasets/downloads/trash_bin
+        enabled: true
+    self:
+      - name: 巡逻视角-垃圾桶
+        dir: datasets/self/trash_bin
+        enabled: false
+
+  manhole_hazard:
+    public:
+      - name: Roboflow Open-Manholes
+        url: https://universe.roboflow.com/aibased-solution-for-realtime-detection-of-road-anomalies-d6eay/open-manholes
+        local_dir: datasets/downloads/open_manholes
+        enabled: true
+      - name: Roboflow Road Damage|Manhole|Sewer Covers（约 6.5k 图）
+        url: https://universe.roboflow.com/hazels-space/road-damage-manhole-sewer-covers
+        local_dir: datasets/downloads/road_damage_manhole
+        enabled: true
+      - name: Roboflow Manhole_Classification（open/closed/improperly_closed）
+        url: https://universe.roboflow.com/bits-gtqdp/manhole_classification
+        local_dir: datasets/downloads/manhole_classification
+        enabled: true
+      - name: HuggingFace ALTHISM/Obstacle（含 Uncovered manhole）
+        url: https://huggingface.co/datasets/ALTHISM/Obstacle
+        local_dir: datasets/downloads/obstacle_hf
+        enabled: false
+    self:
+      - name: 巡逻视角-井盖异常
+        dir: datasets/self/manhole_hazard
+        enabled: false
+
+  gate_or_door:
+    public:
+      - name: Roboflow gate/door（选定项目后填具体 URL）
+        url: https://universe.roboflow.com/search?q=gate%20barrier
+        local_dir: datasets/downloads/gate_or_door
+        enabled: true
+    self:
+      - name: 巡逻视角-闸门地锁
+        dir: datasets/self/gate_or_door
+        enabled: true
+
+  crosswalk:
+    public:
+      - name: Roboflow crosswalk / ped crossing（选定项目后可换成具体集 URL）
+        url: https://universe.roboflow.com/search?q=crosswalk%20object%20detection
+        local_dir: datasets/downloads/crosswalk
+        enabled: true
+      - name: Roboflow road-signs（含 ped_crossing / zebra 等，需类映射）
+        url: https://universe.roboflow.com/roboflow-100/road-signs-6ih4y
+        local_dir: datasets/downloads/road_signs_rf100
+        enabled: false
+      - name: BDD100K（道路场景，按需裁人行横道相关标注）
+        url: https://bdd-data.berkeley.edu/
+        local_dir: datasets/downloads/bdd100k
+        enabled: false
+    self:
+      - name: 巡逻视角-斑马线
+        dir: datasets/self/crosswalk
+        enabled: false
+
+  speedbump:
+    public:
+      - name: Roboflow speed bump / speedbump（选定项目后填具体 URL）
+        url: https://universe.roboflow.com/search?q=speed%20bump%20object%20detection
+        local_dir: datasets/downloads/speedbump
+        enabled: true
+    self:
+      - name: 巡逻视角-减速带
+        dir: datasets/self/speedbump
+        enabled: false
+
+  fence:
+    public:
+      - name: Roboflow fence / wall（选定项目后填具体 URL）
+        url: https://universe.roboflow.com/search?q=class%3Afence
+        local_dir: datasets/downloads/fence
+        enabled: true
+    self:
+      - name: 巡逻视角-围栏
+        dir: datasets/self/fence
+        enabled: false
+
+  climbing:
+    public:
+      - name: Roboflow climb
+        url: https://universe.roboflow.com/zty-75hm1/climb-kguaz
+        local_dir: datasets/downloads/climb_kguaz
+        enabled: true
+      - name: Roboflow climbing_detection
+        url: https://universe.roboflow.com/yolo-hczxz/climbing_detection
+        local_dir: datasets/downloads/climbing_detection
+        enabled: true
+      - name: Roboflow Climbing Fence / Jumping the Fence（搜后选定）
+        url: https://universe.roboflow.com/search?q=climbing%20fence
+        local_dir: datasets/downloads/climbing_fence
+        enabled: true
+    self:
+      - name: 巡逻视角-翻越攀爬
+        dir: datasets/self/climbing
+        enabled: false
+
+  fighting:
+    public:
+      - name: Roboflow fight detection
+        url: https://universe.roboflow.com/voilence/fight-detection-3wchn
+        local_dir: datasets/downloads/fight_detection
+        enabled: true
+      - name: Roboflow FightDetection
+        url: https://universe.roboflow.com/fd/fightdetection
+        local_dir: datasets/downloads/fightdetection
+        enabled: true
+      - name: Roboflow Fight Scene Detection
+        url: https://universe.roboflow.com/ai-2025-hackathon/fight-scene-detection
+        local_dir: datasets/downloads/fight_scene_detection
+        enabled: true
+      - name: Roboflow violence detection（体量大，需自行核许可）
+        url: https://universe.roboflow.com/securityviolence/violence-detection-p4qev
+        local_dir: datasets/downloads/violence_detection
+        enabled: false
+      - name: 勿用未授权再分发的 RWF-2000 衍生集（原作者禁止再分发）
+        url: https://github.com/mchengny/RWF2000-Video-Database-for-Violence-Detection
+        local_dir: datasets/downloads/rwf2000_note_only
+        enabled: false
+        note: 仅作文献线索；训练请改用上面许可清晰的 Roboflow 集或自采
+    self:
+      - name: 巡逻视角-斗殴推搡
+        dir: datasets/self/fighting
+        enabled: false
+
+  water_puddle:
+    public:
+      - name: Roboflow puddle（选定项目后填具体 URL）
+        url: https://universe.roboflow.com/search?q=puddle%20segmentation
+        local_dir: datasets/downloads/water_puddle
+        enabled: true
+    self:
+      - name: 巡逻视角-积水
+        dir: datasets/self/water_puddle
+        enabled: false

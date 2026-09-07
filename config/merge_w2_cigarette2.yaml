@@ -1,0 +1,32 @@
+# 将 Roboflow cigarette.v1i 增量追加到 detect_w1_fire
+#
+# 源类 rokok 已 remap 为 cigarette_or_smoke。prefix 用 cig2，避免与已并入的 cig_* 碰撞。
+# 合并时合成一池后按 7:2:1 划分 train/val/test。
+#
+# 用法：
+#   bash datasets/scripts/merge_job.sh append cigarette2
+
+version: 1
+
+names:
+  - person
+  - bicycle
+  - car
+  - truck
+  - smoke
+  - flame
+  - ebike
+  - litter_bottle
+  - litter_plastic_bag
+  - litter_paper
+  - litter_cardboard
+  - fishing_rod
+  - cigarette_or_smoke
+  - pet
+
+sets:
+  - root: /media/sribd/C02E01372E01284C/patrol_perception/datasets/downloads/cigarette_v1i_yolo
+    prefix: cig2
+    keep: [cigarette_or_smoke]
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0

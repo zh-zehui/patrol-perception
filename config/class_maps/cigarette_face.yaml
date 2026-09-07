@@ -1,0 +1,21 @@
+# Cigarette (Ultralytics/Roboflow 导出) → 本工程 cigarette_or_smoke
+#
+# 源集常见 names: cigarette / face / smoking
+# 事件 smoking = person + cigarette_or_smoke，故只保留 cigarette 框。
+#
+# 用法：
+#   python datasets/scripts/remap_yolo_set.py \
+#     --src /media/.../cigarette_roboflow/cigarette-1ae390b5 \
+#     --out /media/.../cigarette_yolo \
+#     --map config/class_maps/cigarette_face.yaml
+
+version: 1
+
+target_names:
+  - cigarette_or_smoke
+
+# 源 data.yaml 里的类名 → 工程类名；未列出的源类丢弃
+map:
+  cigarette: cigarette_or_smoke
+  # face: （丢弃）
+  # smoking: （丢弃，整人/行为框）

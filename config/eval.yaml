@@ -1,0 +1,35 @@
+version: 1
+splits: [val, test]
+metrics: [ap50, ap50_95, precision, recall, map50, map50_95]
+
+# 与 yolo26l（COCO）可对齐、用于遗忘 Δ 的底座类（不含 pet：预训练无此类）
+base_classes:
+  - person
+  - bicycle
+  - car
+  - truck
+
+focus_classes_by_wave:
+  w1_fire: [smoke, flame]
+  # W2 联合集（detect_w1_fire 现含 W1+W2 追加类）本波关注类
+  w2_joint:
+    - smoke
+    - flame
+    - ebike
+    - litter_bottle
+    - litter_plastic_bag
+    - litter_paper
+    - litter_cardboard
+    - fishing_rod
+    - cigarette_or_smoke
+    - pet
+
+# 遗忘对比基线权重。直接跑 eval_detect_run.py 时：未传 --baseline 则用此项。
+# 训后评测：train_detect_w1_fire.sh 默认也不传 --baseline（走此项）；
+# 覆盖用 EVAL_BASELINE=/path/to.pt；跳过用 EVAL_NO_BASELINE=1。
+baseline:
+  default: data/weights/yolo26l.pt
+
+output:
+  root: data/eval_runs
+  index: data/eval_runs/index.jsonl

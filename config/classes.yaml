@@ -1,0 +1,311 @@
+# 检测/分割/灯分类全集。
+# 训练时实际 names 由 events_catalog 使能并集裁剪（见 catalog.detect_class_union）。
+#
+# ## 数据来源四类（data_tier）——只说明「相对 COCO 怎么起步」，不是互斥 exclusive
+# 1. coco_exact   — COCO 本身就有，W0 可直接用 yolo26s.pt
+# 2. coco_approx  — COCO 有近似类，可先映射
+# 3. public_online — COCO 没有，网上有可用公开集
+# 4. self_collect — COCO 没有，公开集很少/很差，起步更依赖自采
+#
+# ## 训练/推理数据策略（适用于每一个类）
+# - **每个类都可以**用「网上公开数据集」和/或「自制数据集」参与训练
+# - 可只公开、只自制、或二者混合（推荐：公开冷启动 + 巡逻视角自制加固）
+# - **网上集**：必须在 dataset_sources.yaml 写明 url（及下载后 local_dir）
+# - **自制集**：在 dataset_sources.yaml 写明 dir；可改路径 / CLI 覆盖；用 enabled 选择是否参与训练
+# - **推理**只加载最终权重，不区分样本来自公开还是自制
+#
+# 链接与目录清单：config/dataset_sources.yaml
+# 识别任务/事件条目不因本文件删改。
+
+# 全局：允许的训练样本来源（所有 detect 类默认都打开）
+train_sources:
+  public_online: true   # 网络公开集（须有 url）
+  self_collect: true    # 自制集（须可选 dir）
+  mix: true             # 允许同一 data.yaml 内混合
+
+detect_names:
+  - person
+  - bicycle
+  - ebike
+  - car
+  - truck
+  - pet
+  - smoke
+  - flame
+  - cigarette_or_smoke
+  - litter_bottle
+  - litter_plastic_bag
+  - litter_paper
+  - litter_cardboard
+  - fishing_rod
+  - leash
+  - cone_or_barrier
+  - license_plate
+  - traffic_light
+  - cart_or_box
+  - trash_bin
+  - manhole_hazard
+  - gate_or_door
+  - crosswalk
+  - speedbump
+  - fence
+  - climbing
+  - fighting
+
+# 每个 detect 类的数据说明（键必须覆盖 detect_names 全部）
+detect_data:
+  person:
+    data_tier: coco_exact
+    name_zh: 人
+    note: >-
+      yolo26s.pt 已含 COCO person，W0 直接推理即可，不必下载 COCO、不必单独再训。
+      仅在联合微调防遗忘或自制域适应时，才打开 dataset_sources 中的 public/self
+
+  bicycle:
+    data_tier: coco_exact
+    name_zh: 自行车
+    note: COCO bicycle；W0 可直接用。亦可叠加自制数据微调
+
+  ebike:
+    data_tier: public_online
+    name_zh: 电动车/电瓶车
+    note: >-
+      COCO 无此类。勿用 motorcycle（摩托车）冒充。
+      可用网上公开集，也可自制，或二者混合微调
+    sources:
+      - Roboflow / Ultralytics Hub：ebike、electric scooter、e-bike
+      - 自制巡逻视角（推荐与公开集混合）
+
+  car:
+    data_tier: coco_exact
+    name_zh: 小轿车
+    note: COCO car
+
+  truck:
+    data_tier: coco_exact
+    name_zh: 大货车
+    note: COCO truck；可选后期合并 bus 作近似增强，但不改事件名
+
+  pet:
+    data_tier: coco_approx
+    name_zh: 猫/狗等宠物
+    note: >-
+      检测层不再区分 cat/dog。COCO cat+dog remap 为 pet；亦可并入自采/公开 pet 集。
+
+  smoke:
+    data_tier: public_online
+    name_zh: 烟雾
+    note: COCO 无。公开烟火检测集微调
+    sources:
+      - HuggingFace / Roboflow fire-smoke
+      - FASDD 等
+
+  flame:
+    data_tier: public_online
+    name_zh: 明火
+    note: COCO 无。与 smoke 同源烟火集，类名 fire→flame
+    sources:
+      - 同上烟火公开集
+
+  cigarette_or_smoke:
+    data_tier: public_online
+    name_zh: 香烟/吸烟烟羽
+    note: COCO 无。吸烟检测公开集；服务 smoking 事件
+    sources:
+      - Ultralytics Hub / Roboflow / Kaggle smoking·cigarette
+      - 例：Hub「Cigarette」等人脸+烟检测集
+
+  litter_bottle:
+    data_tier: coco_approx
+    name_zh: 水瓶垃圾
+    coco_source: bottle
+    note: COCO bottle 近似映射为本类（见 coco_alias）；建议 TACO Bottle 加固区分货架瓶与丢弃垃圾
+    sources:
+      - W0：yolo26s COCO bottle→litter_bottle
+      - W2：TACO 等
+
+  litter_plastic_bag:
+    data_tier: public_online
+    name_zh: 塑料袋垃圾
+    note: COCO 无。TACO 等垃圾集映射
+    sources:
+      - TACO（Plastic bag 等类）
+      - Roboflow street litter
+
+  litter_paper:
+    data_tier: public_online
+    name_zh: 废纸垃圾
+    note: COCO 无。TACO Paper 相关类映射
+    sources:
+      - TACO
+
+  litter_cardboard:
+    data_tier: public_online
+    name_zh: 纸箱垃圾
+    note: COCO 无。TACO Cardboard；推理侧建议 zones 禁报货仓堆货
+    sources:
+      - TACO
+
+  fishing_rod:
+    data_tier: public_online
+    name_zh: 钓竿
+    note: COCO 无。Objects365 有 Fishing Rod；Hub/Roboflow 另有钓鱼相关集
+    sources:
+      - Objects365 Fishing Rod
+      - Ultralytics Hub Explore（搜 fishing/rod）
+      - Roboflow fishing_recognition 等
+
+  leash:
+    data_tier: self_collect
+    name_zh: 狗绳
+    note: >-
+      起步更依赖自采；若日后有合格公开 leash 集也可并入。
+      所有类均允许公开+自制混合训练（见文件头 train_sources）
+    sources:
+      - 自制巡逻视角为主；公开集有则追加
+
+  cone_or_barrier:
+    data_tier: public_online
+    name_zh: 锥桶/路障
+    note: COCO 无。公开交通锥/路障检测集
+    sources:
+      - Roboflow traffic cone / road barrier
+      - 部分 BDD 相关标注
+
+  license_plate:
+    data_tier: public_online
+    name_zh: 车牌框
+    note: COCO 无。检框用公开车牌检测集；号牌字符走 OCR 不进本检测头
+    sources:
+      - CCPD 等中国车牌检测集
+
+  traffic_light:
+    data_tier: coco_exact
+    name_zh: 交通信号灯框
+    note: COCO traffic light；灯色红黄绿需另做分类头/公开 cls 集（非本 detect 类）
+
+  cart_or_box:
+    data_tier: coco_approx
+    name_zh: 推车/箱包堆物
+    coco_source: suitcase  # 另可参考 backpack、handbag，勿写进 coco_alias 除非确认策略
+    note: COCO 无完全同名类；可用 suitcase 等近似，或公开物流箱/手推车集加固
+    sources:
+      - W0 可选：suitcase 等作弱近似（需在推理映射表显式打开）
+      - Roboflow cart/box 等
+
+  trash_bin:
+    data_tier: public_online
+    name_zh: 垃圾桶
+    note: COCO 无。公开 trash bin 检测集；满溢状态仍缺，不在本类解决
+    sources:
+      - Roboflow trash bin / garbage can
+
+  manhole_hazard:
+    data_tier: public_online
+    name_zh: 异常井盖
+    note: >-
+      COCO 无。网上公开集较多（打开/缺失/井盖框等），映射到本类；
+      亦可自制巡逻视角混合训练
+    sources:
+      - 详见 dataset_sources.yaml
+
+  gate_or_door:
+    data_tier: public_online
+    name_zh: 闸门/地锁粗检
+    note: COCO 无门闸专用巡逻类。公开门/闸机集可起步，细状态多需自采
+    sources:
+      - Roboflow gate/door；场地相关建议自采补
+      - 详见 dataset_sources.yaml
+
+  crosswalk:
+    data_tier: public_online
+    name_zh: 人行横道/斑马线
+    note: COCO 无。可用 Roboflow/BDD 等相关公开集；巡逻视角建议自制加固
+    sources:
+      - 详见 dataset_sources.yaml
+
+  speedbump:
+    data_tier: public_online
+    name_zh: 减速带
+    note: COCO 无。Roboflow 等社区集可起步，标注定义不一，建议公开+自制混合
+    sources:
+      - 详见 dataset_sources.yaml
+
+  fence:
+    data_tier: public_online
+    name_zh: 围栏
+    note: COCO 无。围栏/护栏结构检测；服务翻越围栏等事件
+    sources:
+      - 详见 dataset_sources.yaml
+
+  climbing:
+    data_tier: public_online
+    name_zh: 攀爬/翻越行为框
+    note: >-
+      COCO 无。公开集常直接标 climb/climbing/Climbing Fence；
+      与 person+fence 规则组合触发 fence_climb 事件（事件名在 events_catalog，不在本列表）
+    sources:
+      - 详见 dataset_sources.yaml
+
+  fighting:
+    data_tier: public_online
+    name_zh: 斗殴/推搡行为框
+    note: >-
+      COCO 无。公开 fight/violence 检测集映射为本类；
+      事件 fighting_candidate 可叠加 person+pose 规则；注意许可与域差（监控≠巡逻）
+    sources:
+      - 详见 dataset_sources.yaml
+
+seg_names:
+  - water_puddle
+
+seg_data:
+  water_puddle:
+    data_tier: public_online
+    name_zh: 积水
+    note: COCO 无。公开 puddle seg/detect；定义主观
+    sources:
+      - Roboflow puddle / water hazard
+
+tl_names:
+  - red
+  - yellow
+  - green
+  - other
+
+tl_data:
+  note: 灯色分类不是 COCO 检测类；从 traffic_light 框裁 ROI 后分类，或用公开 traffic light classification 集
+
+# 旁路模块（非 detect 头）数据说明
+module_data:
+  pose:
+    data_tier: coco_exact
+    note: 直接用官方 yolo26s-pose.pt（COCO-Pose 预训练），躺卧/跌倒规则不必先自训
+  face:
+    data_tier: public_online
+    note: COCO 检测头无人脸类；用人脸专用公开权重/数据集，不塞进 yolo26s COCO80 微调头
+  audio:
+    data_tier: self_collect
+    note: 非视觉；阈值或轻量音频模型，需现场麦克风与阈值标定
+  ocr:
+    data_tier: public_online
+    note: 车牌字符串用 PaddleOCR/EasyOCR；可用公开车牌图联调
+  seg:
+    data_tier: public_online
+    note: 见 seg_data
+  depth:
+    data_tier: coco_exact
+    note: 传感器 Depth（Gemini336），非训练集
+  zones:
+    data_tier: self_collect
+    note: 电子围栏多边形，场地自配
+  clock:
+    data_tier: coco_exact
+    note: 系统时钟/亮度门控，无视觉数据集
+
+# COCO 预训练名 → 本工程名（仅 data_tier=coco_approx 的显式映射）
+# 禁止：motorcycle → ebike（摩托车 ≠ 电动车/电瓶车）
+coco_alias:
+  bottle: litter_bottle
+  cat: pet
+  dog: pet

@@ -1,0 +1,36 @@
+# 将纯电瓶车商品图（e-bike_yolo）增量追加到 detect_w1_fire
+#
+# 前提：
+#   1. detect_w1_fire 已含 ebike 类（W2 append 之后）
+#   2. 已用 flat_images_to_yolo.py 把扁平 e-bike 目录转成 e-bike_yolo
+#
+# names 必须与当前 detect_w1_fire/data.yaml 完全一致（本波不加新类）。
+# prefix 用 ebike2，避免与已并入的 ebike_* 碰撞。
+#
+# 用法：
+#   python datasets/scripts/merge_yolo_sets.py --mode append \
+#     --config config/merge_w2_ebike2.yaml \
+#     --out /media/sribd/C02E01372E01284C/patrol_perception/datasets/detect_w1_fire
+
+version: 1
+
+names:
+  - person
+  - bicycle
+  - car
+  - truck
+  - smoke
+  - flame
+  - ebike
+  - litter_bottle
+  - litter_plastic_bag
+  - litter_paper
+  - litter_cardboard
+  - fishing_rod
+  - cigarette_or_smoke
+  - pet
+
+sets:
+  - root: /media/sribd/C02E01372E01284C/patrol_perception/datasets/downloads/e-bike_yolo
+    prefix: ebike2
+    keep: [ebike]

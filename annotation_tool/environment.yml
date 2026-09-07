@@ -1,0 +1,8 @@
+name: d1-autolabel
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - -e ".[test]"

@@ -1,0 +1,68 @@
+# W2 增量追加到 detect_w1_fire（--mode append）
+#
+# 前提：已有 full merge 的 detect_w1_fire（W1 names 为前 6 类）。
+# 本文件只列新增源；names 必须以现有 data.yaml 为前缀，只在末尾追加。
+#
+# 注意：
+# - COCO cat+dog remap 为 pet，prefix=coco_pet（勿用 coco）
+# - keep 只保留 pet
+# - 各源需已 remap 到工程类名（ebike_yolo / taco_yolo / …）
+#
+# 用法：
+#   python datasets/scripts/merge_yolo_sets.py --mode append \
+#     --config config/merge_w2_append.yaml \
+#     --out /media/sribd/C02E01372E01284C/patrol_perception/datasets/detect_w1_fire
+
+version: 1
+
+names:
+  # --- 与 detect_w1_fire 现有 names 完全一致（不可改序/插类）---
+  - person
+  - bicycle
+  - car
+  - truck
+  - smoke
+  - flame
+  # --- 末尾追加 ---
+  - ebike
+  - litter_bottle
+  - litter_plastic_bag
+  - litter_paper
+  - litter_cardboard
+  - fishing_rod
+  - cigarette_or_smoke
+  - pet
+
+sets:
+  - root: /media/sribd/C02E01372E01284C/patrol_perception/datasets/downloads/ebike_yolo
+    prefix: ebike
+    keep: [person, bicycle, ebike, car]
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  - root: /media/sribd/C02E01372E01284C/patrol_perception/datasets/downloads/taco_yolo
+    prefix: taco
+    keep: [litter_bottle, litter_plastic_bag, litter_paper, litter_cardboard]
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  - root: /media/sribd/C02E01372E01284C/patrol_perception/datasets/downloads/fishing_yolo
+    prefix: fishing
+    keep: [fishing_rod]
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  - root: /media/sribd/C02E01372E01284C/patrol_perception/datasets/downloads/cigarette_yolo
+    prefix: cig
+    keep: [cigarette_or_smoke]
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  # 仅追加 pet；prefix 必须与 W1 的 coco 不同
+  - root: /media/sribd/C02E01372E01284C/patrol_perception/datasets/downloads/coco_pet_train_yolo
+    extra_roots:
+      - /media/sribd/C02E01372E01284C/patrol_perception/datasets/downloads/coco_pet_val_yolo
+    prefix: coco_pet
+    keep: [pet]
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0

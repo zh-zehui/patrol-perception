@@ -1,0 +1,560 @@
+# 事件目录约定（events_catalog）
+#
+# 本文件是训练 / 推理的事件总开关来源。
+# 详细算法见 docs/superpowers/specs/2026-08-06-patrol-event-algorithms.md
+# 实施计划 §0.4：docs/superpowers/plans/2026-08-05-patrol-perception-yolo26.md
+#
+# ## 字段
+# - id: 英文事件 id（对外 JSON type）
+# - name_zh: 中文名
+# - layer: s20 | l1 | l2 | l3
+# - status: ship | partial | wontfix_phase1
+# - enabled: 总开关
+#     true  → 可参与「训练类并集」+ 推理可 Emit
+#     false → 不因本事件拉训练数据/旁路；推理跳过本规则
+# - depends_on.detect: 本事件需要的检测类名（须 ⊆ classes.yaml detect_names）
+# - 各类「相对 COCO 怎么起步」见 classes.yaml → detect_data.data_tier
+#     coco_exact | coco_approx | public_online | self_collect
+# - 每个类都可用网上公开集和/或自制集训练；推理用最终权重
+# - 网上集链接 / 自制集目录：config/dataset_sources.yaml（public.url 必填，self.dir 可选）
+# - depends_on.modules: 旁路/规则模块
+#     取值: pose | face | seg | ocr | audio | depth | zones | clock
+# - reason: status 为 partial / wontfix_phase1 时必填；ship 也可写数据来源/映射说明
+# - COCO 近似映射见 classes.yaml coco_alias（仅 bottle→litter_bottle；禁止 motorcycle→ebike）
+#
+# ## 解析规则（catalog.py）
+# 1) active = enabled==true 且 status != wontfix_phase1
+# 2) detect 训练并集 = ∪ active.depends_on.detect  ∪ train.always_include_detect
+# 3) modules 并集 = ∪ active.depends_on.modules
+# 4) 某类只要仍被任一 active 事件依赖，即使关掉「只依赖该类的另一事件」，类仍保留
+
+version: 1
+
+train:
+  # 联合微调时必须回放的底座类（防忘掉 yolo26s/COCO 能力）
+  always_include_detect:
+    - person
+    - bicycle
+    - car
+    - truck
+  # 微调新类时：下载 COCO（可用子集）与新数据合并训练；见 datasets/README.md §0.4
+  coco_replay:
+    required_when_finetuning: true
+    prefer_subset: true
+    note: 全量 COCO 可选；子集按 always_include_detect 抽样即可
+
+events:
+  # —— §2.0 客户标配 ——
+  - id: bicycle
+    name_zh: 发现非机动车自行车
+    layer: s20
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [bicycle]
+      modules: []
+    reason: ""
+
+  - id: ebike
+    name_zh: 发现非机动车电动车
+    layer: s20
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [ebike]
+      modules: []
+    reason: >-
+      data_tier=public_online（见 classes.yaml）：COCO 无电瓶车类；
+      摩托车 motorcycle ≠ 本事件；需 Roboflow/Hub 电瓶车·滑板车集微调
+
+  - id: car
+    name_zh: 发现机动车小轿车
+    layer: s20
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [car]
+      modules: []
+    reason: ""
+
+  - id: truck
+    name_zh: 发现机动车大货车
+    layer: s20
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [truck]
+      modules: []
+    reason: ""
+
+  - id: smoke
+    name_zh: 发现烟雾
+    layer: s20
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [smoke]
+      modules: []
+    reason: ""
+
+  - id: flame
+    name_zh: 发现明火
+    layer: s20
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [flame]
+      modules: []
+    reason: ""
+
+  - id: crowd
+    name_zh: 发现人员聚集
+    layer: s20
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [person]
+      modules: []
+    reason: ""
+
+  - id: face_capture
+    name_zh: 人脸抓拍
+    layer: s20
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [person]
+      modules: [face]
+    reason: ""
+
+  - id: noise
+    name_zh: 发现噪音
+    layer: s20
+    status: ship
+    enabled: true
+    depends_on:
+      detect: []
+      modules: [audio]
+    reason: ""
+
+  - id: pet
+    name_zh: 发现宠物
+    layer: s20
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [pet]
+      modules: []
+    reason: 检测类 cat/dog 已合并为 pet
+
+  - id: smoking
+    name_zh: 发现人员吸烟
+    layer: s20
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [person, cigarette_or_smoke]
+      modules: []
+    reason: 依赖 cigarette 公开集；小目标，目标 M1-M2
+
+  - id: fishing
+    name_zh: 发现钓鱼
+    layer: s20
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [person, fishing_rod]
+      modules: [zones]
+    reason: >-
+      数据可从 Objects365「Fishing Rod」类、Ultralytics Hub 社区集、
+      Roboflow fishing_recognition 等获取并映射为 fishing_rod；
+      仍标 partial：社区集质量参差，且与巡逻车水域视角有域差，需多帧人-杆规则+水域ROI
+
+  - id: lying_person
+    name_zh: 发现人员躺卧
+    layer: s20
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [person]
+      modules: [pose]
+    reason: ""
+
+  - id: night_loitering
+    name_zh: 发现人员夜间滞留
+    layer: s20
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [person]
+      modules: [clock]
+    reason: ""
+
+  - id: litter_bottle
+    name_zh: 发现水瓶垃圾
+    layer: s20
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [litter_bottle]
+      modules: []
+    reason: >-
+      W0：COCO `bottle` → 本工程 `litter_bottle`（见 classes.yaml coco_alias）；
+      W2：可用 TACO Bottle 等类加固微调；货架瓶 vs 丢弃垃圾靠 ROI/场景区分
+
+  - id: litter_plastic_bag
+    name_zh: 发现塑料袋垃圾
+    layer: s20
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [litter_plastic_bag]
+      modules: []
+    reason: TACO 映射；存在域差
+
+  - id: litter_paper
+    name_zh: 发现废纸垃圾
+    layer: s20
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [litter_paper]
+      modules: []
+    reason: TACO 映射；易与正常纸张混淆
+
+  - id: litter_cardboard
+    name_zh: 发现纸箱垃圾
+    layer: s20
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [litter_cardboard]
+      modules: [zones]
+    reason: 需禁报区防堆货误报
+
+  - id: dog_unleashed
+    name_zh: 发现不牵狗绳
+    layer: s20
+    status: partial
+    enabled: false
+    depends_on:
+      detect: [pet, person]
+      modules: []
+    reason: leash 公开数据不足；默认关，开启时用弱启发式
+
+  # —— §2.2 L1 ——
+  - id: fall
+    name_zh: 人员跌倒
+    layer: l1
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [person]
+      modules: [pose]
+    reason: ""
+
+  - id: illegal_parking
+    name_zh: 违规停车
+    layer: l1
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [car, truck]
+      modules: [zones]
+    reason: 依赖禁停多边形配置
+
+  - id: plate_read
+    name_zh: 车牌识别
+    layer: l1
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [license_plate, car, truck]
+      modules: [ocr]
+    reason: ""
+
+  - id: intrusion
+    name_zh: 行人闯入禁行区
+    layer: l1
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [person]
+      modules: [zones]
+    reason: 依赖禁行区配置
+
+  - id: fire_lane_block
+    name_zh: 消防通道占用
+    layer: l1
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [car, truck]
+      modules: [zones]
+    reason: 依赖消防通道多边形
+
+  - id: barrier_block
+    name_zh: 路障锥桶占道
+    layer: l1
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [cone_or_barrier]
+      modules: [zones]
+    reason: ""
+
+  - id: tl_violation_assist
+    name_zh: 信号灯违规辅助
+    layer: l1
+    status: partial
+    enabled: false
+    depends_on:
+      detect: [traffic_light, car, person]
+      modules: [zones]
+    reason: 需灯色分类与停止线；默认关，标定后再开
+
+  - id: fighting_candidate
+    name_zh: 斗殴推搡候选
+    layer: l1
+    status: partial
+    enabled: false
+    depends_on:
+      detect: [person, fighting]
+      modules: [pose]
+    reason: >-
+      公开 fight/violence 检测集较多（见 dataset_sources：fight-detection、FightDetection、
+      Fight Scene Detection 等）；可映射为检测类 fighting，并叠加 person+pose 规则。
+      默认关：监控域差大、误报高，仅作候选告警；训通并压误报后再 enabled: true。
+      注意避开未授权再分发的 RWF-2000 衍生集
+
+  - id: fence_climb
+    name_zh: 翻越围栏
+    layer: l1
+    status: partial
+    enabled: false
+    depends_on:
+      detect: [person, fence, climbing]
+      modules: [zones]
+    reason: >-
+      事件不是 classes 里的类名；检测依赖 fence + climbing（及 person）。
+      公开集：Roboflow climb / climbing_detection / Climbing Fence 等（见 dataset_sources）；
+      监控域与巡逻视角有差，训通验收后再 enabled: true
+
+  - id: manhole_hazard
+    name_zh: 井盖异常
+    layer: l1
+    status: partial
+    enabled: false
+    depends_on:
+      detect: [manhole_hazard]
+      modules: []
+    reason: >-
+      公开集充足：Roboflow Open-Manholes、Road Damage|Manhole|Sewer Covers、
+      Manhole_Classification（open/closed）、HF Obstacle「Uncovered manhole」等
+      （见 dataset_sources）；默认关因巡逻视角域差与「异常」定义需与打开/缺失类对齐，训通再开
+
+  # —— §2.3 L2 ——
+  - id: channel_narrow
+    name_zh: 通道净空不足
+    layer: l2
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [cart_or_box, litter_cardboard, person]
+      modules: [zones]
+    reason: 依赖通道多边形
+
+  - id: bay_occupied
+    name_zh: 停靠位占用
+    layer: l2
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [car, truck, person]
+      modules: [zones]
+    reason: 依赖泊位多边形
+
+  - id: loitering
+    name_zh: 徘徊
+    layer: l2
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [person]
+      modules: []
+    reason: ""
+
+  - id: tailing
+    name_zh: 尾随
+    layer: l2
+    status: partial
+    enabled: false
+    depends_on:
+      detect: [person]
+      modules: []
+    reason: 需车速/位姿输入；无则仅用 loitering
+
+  - id: construction_zone
+    name_zh: 施工围挡作业区
+    layer: l2
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [cone_or_barrier]
+      modules: []
+    reason: fence 类质量参差
+
+  - id: micromobility_mispark
+    name_zh: 共享单车电瓶车乱停
+    layer: l2
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [bicycle, ebike]
+      modules: [zones]
+    reason: 依赖 ebike 质量与禁停 ROI
+
+  - id: water_puddle
+    name_zh: 积水油污坑洞
+    layer: l2
+    status: partial
+    enabled: false
+    depends_on:
+      detect: []
+      modules: [seg]
+    reason: 公开 puddle 集定义主观；有 seg 权重再开
+
+  - id: trash_overflow
+    name_zh: 垃圾桶满溢倾倒
+    layer: l2
+    status: wontfix_phase1
+    enabled: false
+    depends_on:
+      detect: [trash_bin]
+      modules: []
+    reason: 缺可靠满/空状态公开标注
+
+  - id: greenbelt_encroach
+    name_zh: 绿化侵占倒伏
+    layer: l2
+    status: wontfix_phase1
+    enabled: false
+    depends_on:
+      detect: []
+      modules: []
+    reason: 强场地依赖，无通用公开集
+
+  - id: streetlight_fault
+    name_zh: 路灯异常
+    layer: l2
+    status: wontfix_phase1
+    enabled: false
+    depends_on:
+      detect: []
+      modules: [clock]
+    reason: 不作为一期交付事件
+
+  - id: signage_anomaly
+    name_zh: 指示牌广告异常
+    layer: l2
+    status: wontfix_phase1
+    enabled: false
+    depends_on:
+      detect: []
+      modules: []
+    reason: 需基准图/专用类
+
+  # —— §2.4 L3 ——
+  - id: nav_dynamic_obstacle
+    name_zh: 动态障碍语义
+    layer: l3
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [person, bicycle, ebike, car, truck, pet]
+      modules: []
+    reason: ""
+
+  - id: nav_static_obstacle
+    name_zh: 静态可移障碍
+    layer: l3
+    status: partial
+    enabled: true
+    depends_on:
+      detect: [litter_bottle, litter_plastic_bag, litter_paper, litter_cardboard, cart_or_box]
+      modules: []
+    reason: box 类覆盖有限
+
+  - id: nav_cone_barrier
+    name_zh: 锥桶水马石墩
+    layer: l3
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [cone_or_barrier]
+      modules: []
+    reason: ""
+
+  - id: nav_gate_lock
+    name_zh: 地锁闸门状态
+    layer: l3
+    status: partial
+    enabled: false
+    depends_on:
+      detect: [gate_or_door]
+      modules: []
+    reason: >-
+      检测类 gate_or_door 已有公开/自制路径（dataset_sources）；
+      默认关是因为开/关/锁定细状态公开标注不足，一期宜先做「检出」再扩展状态
+
+  - id: nav_crosswalk_speedbump
+    name_zh: 人行横道减速带
+    layer: l3
+    status: partial
+    enabled: false
+    depends_on:
+      detect: [crosswalk, speedbump]
+      modules: []
+    reason: >-
+      已挂检测类 crosswalk / speedbump；公开集见 dataset_sources（Roboflow/BDD 等）；
+      域差与标注定义不一，训通并验收后再 enabled: true
+
+  - id: nav_congestion
+    name_zh: 前方拥堵
+    layer: l3
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [person, car, truck, bicycle, ebike]
+      modules: [zones]
+    reason: ""
+
+  - id: near_obstacle
+    name_zh: 近距障碍辅助
+    layer: l3
+    status: ship
+    enabled: true
+    depends_on:
+      detect: [person, car, truck, bicycle, ebike, cart_or_box, cone_or_barrier]
+      modules: [depth]
+    reason: ""
+
+  - id: curb_step
+    name_zh: 台阶路缘
+    layer: l3
+    status: wontfix_phase1
+    enabled: false
+    depends_on:
+      detect: []
+      modules: [depth, seg]
+    reason: 一期数据与方案不足
+
+  - id: traffic_light_state
+    name_zh: 信号灯状态
+    layer: l3
+    status: partial
+    enabled: false
+    depends_on:
+      detect: [traffic_light]
+      modules: []
+    reason: 需灯色分类头；正对可用侧向弱，标定后再开

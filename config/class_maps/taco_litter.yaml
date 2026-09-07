@@ -1,0 +1,51 @@
+# TACO 源类名 → 本工程 litter_*（未列出的类丢弃）
+#
+# 用法：
+#   PYTHONPATH=src python datasets/scripts/taco_to_yolo.py \
+#     --taco-root /media/.../datasets/downloads/taco \
+#     --out /media/.../datasets/downloads/taco_yolo \
+#     --map config/class_maps/taco_litter.yaml
+
+version: 1
+
+# 输出 data.yaml 中的 names 顺序（固定 id）
+target_names:
+  - litter_bottle
+  - litter_plastic_bag
+  - litter_paper
+  - litter_cardboard
+
+# TACO categories[].name → target_names 中的名字
+map:
+  # bottle
+  Other plastic bottle: litter_bottle
+  Clear plastic bottle: litter_bottle
+  Glass bottle: litter_bottle
+
+  # plastic bag / wrapper
+  Plastic film: litter_plastic_bag
+  Six pack rings: litter_plastic_bag
+  Garbage bag: litter_plastic_bag
+  Other plastic wrapper: litter_plastic_bag
+  Single-use carrier bag: litter_plastic_bag
+  Polypropylene bag: litter_plastic_bag
+  Crisp packet: litter_plastic_bag
+  Plastified paper bag: litter_plastic_bag
+
+  # paper
+  Magazine paper: litter_paper
+  Tissues: litter_paper
+  Wrapping paper: litter_paper
+  Normal paper: litter_paper
+  Paper bag: litter_paper
+  Paper cup: litter_paper
+  Paper straw: litter_paper
+
+  # cardboard / carton
+  Toilet tube: litter_cardboard
+  Other carton: litter_cardboard
+  Egg carton: litter_cardboard
+  Drink carton: litter_cardboard
+  Corrugated carton: litter_cardboard
+  Meal carton: litter_cardboard
+  Pizza box: litter_cardboard

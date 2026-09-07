@@ -1,0 +1,9 @@
+fastapi>=0.115,<1
+uvicorn>=0.34,<1
+python-multipart>=0.0.20,<1
+Pillow>=10,<12
+setuptools<81
+einops>=0.8,<1
+pycocotools>=2.0.11,<3
+triton==3.7.1
+sam3 @ git+https://github.com/facebookresearch/sam3.git@main

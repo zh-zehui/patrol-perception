@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>D1 数据集统计与构建</title><link rel="stylesheet" href="/static/style.css?v=20260820.3"></head>
+<body class="builder-body">
+<header><div><strong>D1 数据集统计与构建</strong><a class="top-link" href="/">返回图片标注</a></div><div id="message">正在载入…</div></header>
+<main class="builder-main"><section class="builder-content">
+  <div class="builder-toolbar"><button id="loadDatasets">读取扫描缓存</button><button id="clearBuilderState">清除本页配置</button><label>扫描目标 <select id="scanDataset"><option value="">全部登记数据集</option></select></label><button id="refreshDatasets">重新扫描选中数据集</button><button id="stopScan" disabled>停止扫描</button><label>输出路径 <input id="output" placeholder="/path/to/new_dataset"></label><label>随机种子 <input id="seed" type="number" value="0"></label></div>
+  <h2>1. 选择已标注数据集</h2><p class="muted">只使用扫描缓存；构建时仅抽取完全干净的图片，包含任意异常标签的图片会整张排除。</p>
+  <div id="scanProgress" class="scan-progress" hidden><div class="scan-progress-title">扫描进度</div><div class="scan-progress-line"><i id="scanBar"></i></div><div id="scanProgressText" class="muted"></div></div><div id="datasets" class="builder-datasets"></div>
+  <h2>2. 选择本次模型的类别</h2><div id="classes" class="class-checks"></div>
+  <h2>3. 每个数据集的类别目标图片数</h2><p class="muted">数量按“包含该类别的图片数”计算；一张图片同时包含多个类别时只复制一次。</p>
+  <div id="quotaTable" class="quota-wrap"><span class="muted">请先读取并选择数据集和类别。</span></div>
+  <h2>4. 数据集划分</h2><div class="split-controls"><label>train <input id="trainRatio" type="number" step="0.01" min="0" max="1" value="0.70"></label><label>val <input id="valRatio" type="number" step="0.01" min="0" max="1" value="0.20"></label><label>test <input id="testRatio" type="number" step="0.01" min="0" max="1" value="0.10"></label><span id="ratioHint" class="muted">合计应为 1.00</span></div>
+  <div class="builder-actions"><button id="dryRun" class="primary">Dry Run 预览</button><button id="build">正式构建数据集</button></div><div id="buildProgress" class="scan-progress" hidden><div class="scan-progress-title">构建进度</div><div class="scan-progress-line"><i id="buildBar"></i></div><div id="buildProgressText" class="muted"></div></div>
+  <pre id="report" class="builder-report">等待操作…</pre>
+</section></main>
+<script src="/static/builder.js?v=20260820.3"></script></body></html>

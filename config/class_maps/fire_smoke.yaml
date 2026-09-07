@@ -1,0 +1,22 @@
+# fog_fire_detection / Roboflow Fire-Smoke → 本工程 flame / smoke
+#
+# 源 names: ['Fire', 'Smoke']
+#
+# 用法：
+#   python datasets/scripts/remap_yolo_set.py \
+#     --src /media/.../fog_fire_detection/dataset \
+#     --out /media/.../fog_fire_yolo \
+#     --map config/class_maps/fire_smoke.yaml
+
+version: 1
+
+target_names:
+  - flame
+  - smoke
+
+map:
+  Fire: flame
+  Smoke: smoke
+  fire: flame
+  smoke: smoke
+  flame: flame

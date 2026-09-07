@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>D1 数据集标注门户</title>
+  <link rel="stylesheet" href="/static/portal.css?v=20260903.5">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>D1 数据集标注门户</h1>
+      <p class="muted">在 Web 配置 Key / 模型档案 / 类别与提示词后，即可开始标注（无需改代码）</p>
+    </div>
+    <div class="top-actions">
+      <button type="button" id="btnReload">刷新</button>
+    </div>
+  </header>
+  <div id="msg" class="msg"></div>
+
+  <section class="card">
+    <h2>系统设置 · API Key</h2>
+    <div class="row">
+      <input id="keyId" placeholder="Key ID，如 campus-codex">
+      <input id="keyName" placeholder="显示名称">
+      <input id="keyValue" type="password" placeholder="API Key（新建必填；更新可留空保留原值）">
+      <input id="keyNote" placeholder="备注">
+      <button type="button" id="btnSaveKey">保存 Key</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>名称</th><th>掩码</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody id="keyRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>系统设置 · 模型档案（类似 config.toml）</h2>
+    <div class="grid-2">
+      <div class="row">
+        <input id="profId" placeholder="档案 ID，如 sribd-gpt56">
+        <input id="profName" placeholder="显示名称">
+        <select id="profType">
+          <option value="openai_compatible">openai_compatible（大模型）</option>
+          <option value="sam3">sam3（本地）</option>
+        </select>
+        <label><input id="profDefault" type="checkbox"> 设为默认</label>
+      </div>
+      <div class="row" id="profLlmFields">
+        <input id="profBaseUrl" placeholder="base_url" value="https://api-ai.sribd.cn/v1">
+        <select id="profWireApi">
+          <option value="responses">wire_api: responses</option>
+          <option value="chat_completions">wire_api: chat_completions</option>
+        </select>
+        <input id="profModel" placeholder="model，如 gpt-5.6-sol">
+        <select id="profKeyId"><option value="">选择绑定 Key</option></select>
+        <select id="profEffort">
+          <option value="low">reasoning_effort: low</option>
+          <option value="medium" selected>medium</option>
+          <option value="high">high</option>
+        </select>
+      </div>
+      <div class="row" id="profSamFields" hidden>
+        <input id="profSamUrl" placeholder="SAM3 service_url" value="http://127.0.0.1:8783">
+        <input id="profSamModel" placeholder="model" value="sam3">
+        <input id="profSamConf" placeholder="confidence" value="0.5">
+      </div>
+    </div>
+    <div class="row">
+      <button type="button" id="btnSaveProfile">保存模型档案</button>
+      <span class="muted" id="defaultProfileHint"></span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>名称</th><th>类型</th><th>模型/地址</th><th>操作</th></tr></thead>
+        <tbody id="profileRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>已注册数据集任务</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>任务</th><th>路径</th><th>模型档案</th><th>类别数</th><th>操作</th></tr></thead>
+        <tbody id="datasetRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card" id="taskFormCard">
+    <h2 id="taskFormTitle">注册 / 编辑数据集任务</h2>
+    <div class="row">
+      <input id="taskId" placeholder="任务 ID">
+      <input id="taskName" placeholder="显示名称">
+      <input id="taskPath" placeholder="服务器数据集绝对路径（含 images/）">
+    </div>
+    <div class="row">
+      <select id="taskProfile"><option value="">选择预标注模型档案</option></select>
+      <select id="taskKey"><option value="">可选：覆盖 Key</option></select>
+      <input id="taskConf" placeholder="置信度阈值" value="0.5">
+      <button type="button" id="btnLoadTemplate">载入默认类别模板</button>
+      <button type="button" id="btnAddClass">+ 类别</button>
+    </div>
+    <label>备注</label>
+    <textarea id="taskNotes" rows="2" placeholder="标注什么、有什么要求"></textarea>
+    <label for="taskPrompt">大模型系统提示词（可用 {class_lines}）</label>
+    <div class="row">
+      <button type="button" id="btnLoadPrompt">载入默认提示词（autolabel.py）</button>
+      <span class="muted">选 DeepSeek/Codex 等大模型时会自动载入，便于查看；可改后再保存</span>
+    </div>
+    <textarea id="taskPrompt" rows="12" placeholder="加载中或点击「载入默认提示词」…"></textarea>
+    <h3>类别表（ID 必须从 0 连续）</h3>
+    <div id="classEditor"></div>
+    <div class="row">
+      <button type="button" class="primary" id="btnSaveTask">保存任务配置</button>
+      <button type="button" id="btnResetTask">清空表单</button>
+    </div>
+  </section>
+
+  <script src="/static/portal.js?v=20260903.5"></script>
+</body>
+</html>

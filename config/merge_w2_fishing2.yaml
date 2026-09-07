@@ -1,0 +1,39 @@
+# 将 Roboflow fishing.v1i（俯视钓鱼场景框）增量追加到 detect_w1_fire
+#
+# 源类 fishing 已 remap 为 fishing_rod。框常含人+竿，服务 fishing 事件（person + fishing_rod）。
+# prefix 用 fishing2，避免与已并入的 fishing_* 碰撞。
+# 源集只有 train/val，合并时合成一池后按 7:2:1 划出 test。
+#
+# 用法：
+#   python datasets/scripts/remap_yolo_set.py \
+#     --src .../fishing.v1i.yolo26 \
+#     --out .../fishing_v1i_yolo \
+#     --map config/class_maps/fishing_rod.yaml
+#   python datasets/scripts/merge_yolo_sets.py --mode append \
+#     --config config/merge_w2_fishing2.yaml \
+#     --out .../detect_w1_fire
+
+version: 1
+
+names:
+  - person
+  - bicycle
+  - car
+  - truck
+  - smoke
+  - flame
+  - ebike
+  - litter_bottle
+  - litter_plastic_bag
+  - litter_paper
+  - litter_cardboard
+  - fishing_rod
+  - cigarette_or_smoke
+  - pet
+
+sets:
+  - root: /media/sribd/C02E01372E01284C/patrol_perception/datasets/downloads/fishing_v1i_yolo
+    prefix: fishing2
+    keep: [fishing_rod]
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0

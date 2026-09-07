@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>D1 数据集标注</title>
+  <link rel="stylesheet" href="/static/style.css?v=20260903.8">
+</head>
+<body>
+  <header>
+    <div><strong>D1 数据集标注</strong><span id="dataset"></span><a class="top-link" href="/builder">数据集统计与构建</a></div>
+    <div id="message">正在载入…</div>
+  </header>
+  <main>
+    <aside class="left-panel">
+      <div class="progress"><span id="progressText"></span><div><i id="progressBar"></i></div></div>
+      <div class="status-legend"><span class="legend-item draft-ready">● 待提交</span><span class="legend-item needs-review">! 需复核</span><span class="legend-item reviewed">✓ 已提交</span></div>
+      <input id="filter" placeholder="按文件名筛选">
+      <div id="imageList" class="image-list"></div>
+    </aside>
+    <section class="workspace">
+      <div class="toolbar">
+        <button id="prev">← 上一张</button><button id="next">下一张 →</button><button id="resetView">适应窗口</button><span id="zoomLevel" class="zoom-level">100%</span>
+        <label class="model-picker">自动标注模型 <select id="autoLabelProvider"></select></label><span id="autoLabelProviderStatus" class="provider-status"></span>
+        <button id="autoLabel">自动标注当前图片</button><button id="batchLabel">批量自动标注</button><button id="stopBatchLabel" disabled>停止批量标注</button>
+        <button id="appendCandidates">候选复制并追加到草稿</button><button id="candidateToDraft">候选复制为新草稿</button><button id="batchCandidateToDraft">批量候选复制为新草稿</button><button id="clearCandidates">删除候选文件</button>
+        <button id="restoreBaseline">恢复正式基线到草稿</button>
+        <button id="newBox">新建框 (N)</button><button id="deleteBox">删除框 (Del)</button>
+        <button id="undo">撤销</button><button id="redo">重做</button>
+        <button id="save" class="primary">保存草稿 (Ctrl+S)</button>
+        <button id="review">标记当前图片可提交 (R)</button><button id="commitCurrent" onclick="commitCurrent()">提交当前可提交图片</button><button id="batchDraft">批量创建草稿</button><button id="batchReview">批量审核操作</button><button id="commitReady">批量提交可提交图片</button>
+        <button id="needsReview">需复核</button>
+      </div>
+      <div id="autolabelProgress" class="scan-progress autolabel-progress" hidden>
+        <div class="scan-progress-title">批量自动标注</div>
+        <div class="scan-progress-line"><i id="autolabelBar"></i></div>
+        <div id="autolabelProgressText" class="muted">等待任务…</div>
+      </div>
+      <div id="reviewProgress" class="scan-progress review-progress" hidden><div class="scan-progress-title">批量审核进度</div><div class="scan-progress-line"><i id="reviewBar"></i></div><div id="reviewProgressText" class="muted"></div></div>
+      <div id="stage" class="stage"><canvas id="canvas"></canvas></div>
+      <div class="hint">正式基线、模型候选、编辑草稿相互独立。保存草稿和标记可提交都不会修改正式标签；批量提交时才会写入 labels 并备份旧标签。</div>
+    </section>
+    <aside class="right-panel">
+      <h3>类别</h3>
+      <select id="classSelect"></select>
+      <div class="layer-controls">
+        <label><input id="showBaseline" type="checkbox" checked> 正式基线标签（只读）</label>
+        <label><input id="showCandidates" type="checkbox" checked> 模型候选标签（只读）</label>
+        <label><input id="showDraft" type="checkbox" checked> 当前编辑草稿</label>
+      </div>
+      <h3>当前编辑草稿</h3><div id="boxList" class="box-list"></div>
+      <h3>大模型候选（独立保留）</h3><div id="candidateList" class="box-list"></div>
+      <h3>正式基线（只读）</h3><div id="baselineList" class="box-list"></div>
+      <h3>旧标签历史版本</h3>
+      <div class="history-controls"><select id="historySelect"></select><button id="loadHistory">复制历史到草稿</button></div>
+      <section class="rules">
+        <h3>本项目约定</h3>
+        <ul>
+          <li><code>pet</code>：猫和狗，每只单独框选。</li>
+          <li><code>cigarette_or_smoke</code>：表示香烟实体，名称保持不变。</li>
+          <li><code>smoke</code>：明显的非吸烟环境烟雾。</li>
+          <li>看不清或无法确认的目标不要猜测标框。</li>
+        </ul>
+      </section>
+      <div id="details" class="details"></div>
+      <section class="dataset-tools">
+        <h3>多数据集统计/构建</h3>
+        <select id="scanDataset"><option value="">全部登记数据集</option></select><button id="refreshDatasets">扫描选中数据集</button><button id="stopDatasetScan" disabled>停止扫描</button><button id="showSummary">统计扫描目标</button><div id="datasetPicker" class="dataset-picker"></div>
+        <div id="qualitySummary" class="details quality-summary">点击“汇总统计”查看：物理空标签、异常标签和最终有效框。</div><table id="classTable" class="class-table"><thead><tr><th>类别</th><th>图片数</th><th>原始框</th><th>异常框</th><th>最终有效框</th><th>数据集分布（图片/有效框）</th></tr></thead><tbody></tbody></table><div id="datasetSummary" class="details"></div>
+        <input id="newDatasetId" placeholder="数据集ID">
+        <input id="newDatasetName" placeholder="数据集名称">
+        <input id="newDatasetPath" placeholder="绝对路径">
+        <button id="registerDataset">登记数据集</button>
+        <input id="buildOutput" placeholder="输出路径">
+        <input id="buildClasses" placeholder="类别ID，如 7,8,9,10">
+        <input id="buildTargets" placeholder="目标图片数，如 7=500,8=500">
+        <input id="sourceRatios" placeholder="来源比例，如 public=0.4,self_collected=0.6">
+        <button id="dryRunDataset">Dry Run 预览</button><button id="buildDataset">正式构建新数据集</button>
+      </section>
+    </aside>
+  </main>
+  <script src="/static/app.js?v=20260903.8"></script>
+
+<div id="uiDialog" class="ui-dialog" hidden>
+  <div class="ui-dialog-card" role="dialog" aria-modal="true">
+    <h3 id="uiDialogTitle">请选择</h3>
+    <div id="uiDialogBody" class="ui-dialog-body"></div>
+    <div class="ui-dialog-actions">
+      <button type="button" id="uiDialogCancel">取消</button>
+      <button type="button" id="uiDialogOk" class="primary">确定</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

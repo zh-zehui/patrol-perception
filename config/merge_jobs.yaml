@@ -1,0 +1,128 @@
+version: 1
+jobs:
+  # W1 底座（与 merge_w1_fire.yaml 对齐）；可 remove 后再按 keep 子集 append
+  fire:
+    prefix: fire
+    candidates: [flame, smoke]
+    src_rel: datasets/downloads/fog_fire_yolo
+    remap_out_rel: datasets/downloads/fog_fire_yolo
+    map_rel: null
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  coco:
+    prefix: coco
+    candidates: [person, bicycle, car, truck]
+    src_rel: datasets/downloads/coco_train2017
+    extra_roots_rel:
+      - datasets/downloads/coco_val2017
+    remap_out_rel: datasets/downloads/coco_train2017
+    map_rel: null
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  # COCO cat+dog 收成 pet；train/val 分别 remap 后再 7:2:1 池化
+  coco_pet:
+    prefix: coco_pet
+    candidates: [pet]
+    src_rel: datasets/downloads/coco_train2017
+    extra_roots_rel:
+      - datasets/downloads/coco_val2017
+    remap_out_rel: datasets/downloads/coco_pet_train_yolo
+    extra_remap_out_rel:
+      - datasets/downloads/coco_pet_val_yolo
+    map_rel: config/class_maps/coco_cat_dog_to_pet.yaml
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  taco:
+    prefix: taco
+    candidates: [litter_bottle, litter_plastic_bag, litter_paper, litter_cardboard]
+    src_rel: datasets/downloads/taco_yolo
+    remap_out_rel: datasets/downloads/taco_yolo
+    map_rel: null
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  fishing:
+    prefix: fishing
+    candidates: [fishing_rod]
+    src_rel: datasets/downloads/fishing_yolo
+    remap_out_rel: datasets/downloads/fishing_yolo
+    map_rel: null
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  cig:
+    prefix: cig
+    candidates: [cigarette_or_smoke]
+    src_rel: datasets/downloads/cigarette_yolo
+    remap_out_rel: datasets/downloads/cigarette_yolo
+    map_rel: null
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  ebike:
+    prefix: ebike
+    candidates: [person, bicycle, ebike, car]
+    src_rel: datasets/downloads/ebike_yolo
+    remap_out_rel: datasets/downloads/ebike_yolo
+    map_rel: null
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  fishing2:
+    prefix: fishing2
+    candidates: [fishing_rod]
+    src_rel: datasets/downloads/fishing.v1i.yolo26
+    remap_out_rel: datasets/downloads/fishing_v1i_yolo
+    map_rel: config/class_maps/fishing_rod.yaml
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  bicycle2:
+    prefix: bike2
+    candidates: [bicycle]
+    src_rel: datasets/downloads/Bicycle.v2i.yolo26
+    remap_out_rel: datasets/downloads/bicycle_v2i_yolo
+    map_rel: config/class_maps/bicycle_roboflow.yaml
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  cigarette2:
+    prefix: cig2
+    candidates: [cigarette_or_smoke]
+    src_rel: datasets/downloads/cigarette.v1i.yolo26
+    remap_out_rel: datasets/downloads/cigarette_v1i_yolo
+    map_rel: config/class_maps/cigarette_rokok.yaml
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  ebike2:
+    prefix: ebike2
+    candidates: [ebike]
+    src_rel: datasets/downloads/e-bike_yolo
+    remap_out_rel: datasets/downloads/e-bike_yolo
+    map_rel: null
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  # 实采 litter（02_trash）；默认 remap/merge 丢空标签负样本；合并时 7:2:1 重划分
+  trash2:
+    prefix: trash2
+    candidates: [litter_bottle, litter_plastic_bag, litter_paper, litter_cardboard]
+    src_rel: datasets/downloads/02_trash_full_yolo_5271_images
+    remap_out_rel: datasets/downloads/trash_field_yolo
+    map_rel: config/class_maps/trash_field_litter.yaml
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0
+
+  # 自采/支持集 pet（源 names 已是 pet，无需 remap）；合并时 7:2:1 重划分
+  pet2:
+    prefix: pet2
+    candidates: [pet]
+    src_rel: datasets/downloads/04_pet_support_yolo_5017_images
+    remap_out_rel: datasets/downloads/04_pet_support_yolo_5017_images
+    map_rel: null
+    split_ratios: [0.7, 0.2, 0.1]
+    split_seed: 0

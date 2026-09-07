@@ -1,0 +1,23 @@
+# 实采垃圾反馈集 → 本工程 litter_*
+# 源 names: bottle / box / paper / bag
+#
+# 用法：
+#   python datasets/scripts/remap_yolo_set.py \
+#     --src .../02_trash_full_yolo_5271_images \
+#     --out .../trash_field_yolo \
+#     --map config/class_maps/trash_field_litter.yaml
+#   # 默认不写空标签图；若要负样本加 --keep-empty
+
+version: 1
+
+target_names:
+  - litter_bottle
+  - litter_plastic_bag
+  - litter_paper
+  - litter_cardboard
+
+map:
+  bottle: litter_bottle
+  bag: litter_plastic_bag
+  paper: litter_paper
+  box: litter_cardboard

@@ -1,0 +1,16 @@
+# Roboflow Bicycle.v2i → 本工程 bicycle
+# 源 names: Bicycle
+#
+# 用法：
+#   python datasets/scripts/remap_yolo_set.py \
+#     --src .../Bicycle.v2i.yolo26 \
+#     --out .../bicycle_v2i_yolo \
+#     --map config/class_maps/bicycle_roboflow.yaml
+
+version: 1
+
+target_names:
+  - bicycle
+
+map:
+  Bicycle: bicycle
