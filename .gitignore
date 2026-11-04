@@ -47,3 +47,22 @@ annotation_tool/config/.d1_dataset_scan_cache/
 .env.*
 !.env.example
 config/secrets/
+
+# Machine-local registry, synthetic data, and runtime artifacts
+annotation_tool/config/datasets_registry.yaml
+data/demo_dataset/
+datasets/logs/
+*.log
+test-results.xml
+.coverage
+htmlcov/
+playwright-report/
+test-results/
+*.bag
+*.db3
+*.mcap
+*.safetensors
+*.ckpt
+*.pem
+*.key
+Untitled

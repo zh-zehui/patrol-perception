@@ -1,0 +1,15 @@
+name: 功能建议
+description: 提出具体场景、目标行为和验收方式
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 需要解决的场景
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: 期望行为与验收方式
+    validations:
+      required: true

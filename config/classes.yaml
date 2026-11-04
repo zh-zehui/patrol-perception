@@ -88,6 +88,7 @@ detect_data:
 
   pet:
     data_tier: coco_approx
+    coco_source: [cat, dog]
     name_zh: 猫/狗等宠物
     note: >-
       检测层不再区分 cat/dog。COCO cat+dog remap 为 pet；亦可并入自采/公开 pet 集。

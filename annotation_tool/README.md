@@ -41,15 +41,15 @@
 在本目录执行：
 
 ```bash
-cd /home/sribd/D1_EDU/patrol_perception/annotation_tool
-/home/sribd/miniforge3/bin/conda env create -f environment.yml
+cd annotation_tool
+conda env create -f environment.yml
 conda activate d1-autolabel
 ```
 
 如果环境已经创建，更新命令是：
 
 ```bash
-/home/sribd/miniforge3/bin/conda env update -n d1-autolabel -f environment.yml --prune
+conda env update -n d1-autolabel -f environment.yml --prune
 ```
 
 ## 4. 数据目录
@@ -124,8 +124,7 @@ d1-annotate --dataset /path/to/my_dataset --host 0.0.0.0 --port 8765
 
 ```bash
 conda activate d1-autolabel
-cd /home/sribd/D1_EDU/patrol_perception/annotation_tool
-source ~/.d1-autolabel-campus.env
+cd annotation_tool
 pytest -q
 ```
 
@@ -187,7 +186,7 @@ Thor 环境安装、权重许可和启动方法见 [`sam3_service/README.md`](sa
 ```bash
 conda activate d1-autolabel
 export OPENAI_PROVIDER_NAME="campus_sub2api"
-export OPENAI_BASE_URL="http://10.20.14.80:8080/v1"
+export OPENAI_BASE_URL="https://relay.example.com/v1"
 export OPENAI_VISION_MODEL="codex.gpt-5.6-sol"
 export OPENAI_REASONING_EFFORT="low"
 export OPENAI_STORE="false"
@@ -202,7 +201,7 @@ d1-annotate --dataset /path/to/dataset
 注意事项：
 
 - 中转必须支持 Responses API 的图像 `input_image` 和 Structured Outputs；仅支持文本 Responses API 仍无法标注图片。
-- 当前地址是 HTTP 明文内网地址，密钥和图片在网络链路上没有 TLS 保护，只应在可信内网使用；推荐由管理员启用 HTTPS。
+- 请按实际环境填写服务地址，推荐使用 HTTPS。
 - `OPENAI_STORE=false` 会向中转发送 `store: false`，但中转是否仍记录请求日志取决于中转服务自身策略，需要向管理员确认。
 - 启动页只显示是否配置，不会显示 API key。
 
@@ -300,7 +299,7 @@ Web 不再把旧标签和模型候选混成一套框，当前图片包含四个�
 启动：
 
 ```bash
-cd /home/sribd/D1_EDU/patrol_perception/annotation_tool
+cd annotation_tool
 ./run_portal.sh
 ```
 
@@ -403,79 +402,3 @@ output/
 ```
 
 构建会保留全局类别 ID，不做外部类别映射；一张多类别图片只复制一次，标签只保留选定类别。当前第一版使用多标签贪心抽样和固定随机种子，后续再增加来源比例、采集组切分、近重复检测和扫描缓存。
-
-
-
-• 以后直接复制下面这段提示词，再补充本次修改内容即可。它明确了目标、上下文、边界和验收条件，符合 OpenAI Docs 的提示词建议。   
-                                                                                                                              
-  请将自动化标注项目从源服务器增量迁移到目标服务器，并完成验证。                                                              
-                                                                                                                              
-  源服务器：                                                                                                                  
-  - SSH：sribd@10.20.14.86                                                                                                    
-  - 源码目录：/home/sribd/D1_EDU/patrol_perception/annotation_tool                                                            
-  - Portal 环境：d1-autolabel                                                                                                 
-  - Portal 启动脚本：./run_portal.sh                                                                                          
-  - SAM3 环境：d1-sam3                                                                                                        
-  - SAM3 启动脚本：./sam3_service/run_thor.sh                                                                                 
-                                                                                                                              
-  目标服务器：                                                                                                                
-  - SSH：sribd@10.20.14.24                                                                                                    
-  - 部署根目录：/projects/sribd-apps/d1-autolabel                                                                             
-  - Portal 容器：d1-autolabel-portal                                                                                          
-  - SAM3 容器：d1-sam3                                                                                                        
-  - Portal 地址：0.0.0.0:8765                                                                                                 
-  - SAM3 地址：127.0.0.1:8783                                                                                                 
-  - 目标硬件：x86_64 + NVIDIA Tesla T4                                                                                        
-                                                                                                                              
-  本次修改：                                                                                                                  
-  【在这里说明修改了哪些功能、文件或提交；如果不清楚，就让你自行比较】                                                        
-                                                                                                                              
-  任务要求：                                                                                                                  
-  1. 先只读检查两台服务器，对比 Git 提交、未提交修改、依赖文件和当前容器版本。                                                
-  2. 判断本次修改影响 Portal、SAM3，还是两者都影响，只迁移必要组件。                                                          
-  3. 为源码和部署前状态生成时间戳发布目录、文件清单和 SHA-256 校验值。                                                        
-  4. 源机是 Jetson/Thor 环境，不要直接复制 Conda 环境或 ARM 镜像；在目标机重新构建兼容 x86_64、Tesla T4 和目标 CUDA 驱动的镜  
-  像。                                                                                                                        
-  5. 保留目标机现有数据、注册表、模型、缓存、配置和密钥文件，不覆盖或显示密钥内容。                                           
-  6. 不要直接停止正式容器。先构建并启动 Canary 容器，完成检查后再切换。                                                       
-  7. 保留旧容器和旧镜像作为回滚版本，切换失败时自动恢复。                                                                     
-  8. 验证：                                                                                                                   
-     - Portal 健康检查通过                                                                                                    
-     - 数据集列表和页面正常                                                                                                   
-     - SAM3 /health 正常且模型已加载                                                                                          
-     - Portal 能调用 SAM3 完成一次测试                                                                                        
-     - GPU、CPU、内存和日志无异常                                                                                             
-     - 正式数据及标签文件哈希没有非预期变化                                                                                   
-  9. 完成后报告：                                                                                                             
-     - 源提交和工作区修改                                                                                                     
-     - 实际迁移的文件                                                                                                         
-     - 新旧镜像 ID                                                                                                            
-     - 容器启动参数和挂载                                                                                                     
-     - 测试结果                                                                                                               
-     - 回滚命令                                                                                                               
-     - 尚未解决的风险                                                                                                         
-                                                                                                                              
-  边界：                                                                                                                      
-  - 不删除旧镜像、旧容器和历史发布记录。                                                                                      
-  - 不修改正式数据，除非我明确授权。                                                                                          
-  - 不在输出中显示密码、API Key 或环境变量值。                                                                                
-  - 遇到无法确认的架构、CUDA、数据兼容性问题时，先停止切换并报告。                                                            
-  - 在安全且属于上述范围的步骤中持续执行，不必逐步询问我；涉及删除数据或无法回滚的操作时必须询问。                            
-                                                                                                                              
-  如果只是一次小更新，可以使用简化版：                                                                                        
-                                                                                                                              
-  请按照既有迁移流程，将 10.20.14.86 上                                                                                       
-  /home/sribd/D1_EDU/patrol_perception/annotation_tool                                                                        
-  的最新修改增量迁移到 10.20.14.24。                                                                                          
-                                                                                                                              
-  先比较源码和当前部署，判断只需更新 d1-autolabel-portal，还是同时更新 d1-sam3。                                              
-  保持现有数据、配置、密钥和模型挂载不变。先 Canary 验证，再切换正式容器，保留可回滚版本。                                    
-  完成健康检查、接口测试、SAM3 调用测试和日志检查后，向我报告版本、改动、验证结果及回滚方法。                                 
-  本次修改内容：【填写】                                                                                                      
-                                                                                                                              
-  尤其建议每次填写“本次修改内容”或 Git 提交号，这能显著减少误迁移。参考：OpenAI Docs：Prompting。                             
-                                                                                                                              
-─ Worked for 2m 38s ──────────────────────────────────────────────────────────────────────────────────────────────────────────                                                                                                                              
-─ Conversation recap ─────────────────────────────────────────────────────────────────────────────────────────────────────────
-                                                                                                                              
-  目标是为反复修改、迁移10.20.14.86上的自动化标注项目准备提示词模板。已开始拟定，下一步需补全修改内容、迁移目标和验收条件。 

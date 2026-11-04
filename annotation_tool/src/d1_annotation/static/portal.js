@@ -46,7 +46,7 @@ function fillProfileForm(p) {
     $("profSamModel").value = p.model || "sam3";
     $("profSamConf").value = p.confidence_threshold ?? 0.5;
   } else {
-    $("profBaseUrl").value = p.base_url || "https://api-ai.sribd.cn/v1";
+    $("profBaseUrl").value = p.base_url || "https://api.example.com/v1";
     $("profWireApi").value = p.wire_api || "responses";
     $("profModel").value = p.model || "";
     $("profKeyId").value = p.key_id || "";

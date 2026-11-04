@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="790" viewBox="0 0 1440 790" role="img" aria-labelledby="title desc">
+<title id="title">巡逻视觉系统架构</title><desc id="desc">已实现的数据标注训练闭环和离线检测管线；ROS2 为规划项</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#607b9f"/></marker></defs>
+<rect width="1440" height="790" rx="24" fill="#0b1425"/>
+<g font-family="Inter, Noto Sans CJK SC, Microsoft YaHei, sans-serif">
+<text x="52" y="52" font-size="17" fill="#54d6bd" font-weight="700">PATROL PERCEPTION / SYSTEM OVERVIEW</text>
+<text x="52" y="109" font-size="42" fill="#e8f0fb" font-weight="700">从数据审核，到离线感知</text>
+<text x="52" y="148" font-size="22" fill="#9db0cb" font-weight="400">浏览器标注 · 独立模型服务 · 可追溯评测 · 结构化事件输出</text>
+<text x="52" y="205" font-size="16" fill="#73a9ff" font-weight="700">01  DATA &amp; MODEL LOOP</text>
+<rect x="52" y="228" width="298" height="126" rx="16" fill="#142238" stroke="#263a55"/>
+<rect x="72" y="250" width="5" height="22" rx="2" fill="#73a9ff"/>
+<text x="88" y="268" font-size="25" fill="#e8f0fb" font-weight="700">数据来源与整理</text>
+<text x="76" y="305" font-size="18" fill="#9db0cb" font-weight="400">公开数据 / 自采数据 / 类别映射</text>
+<text x="76" y="334" font-size="16" fill="#73a9ff" font-weight="400">datasets/scripts/</text>
+<rect x="398" y="228" width="298" height="126" rx="16" fill="#142238" stroke="#263a55"/>
+<rect x="418" y="250" width="5" height="22" rx="2" fill="#73a9ff"/>
+<text x="434" y="268" font-size="25" fill="#e8f0fb" font-weight="700">模型候选 + 人工审核</text>
+<text x="422" y="305" font-size="18" fill="#9db0cb" font-weight="400">视觉 API 或 SAM 3 → 草稿 → 提交</text>
+<text x="422" y="334" font-size="16" fill="#73a9ff" font-weight="400">annotation_tool/</text>
+<rect x="744" y="228" width="298" height="126" rx="16" fill="#142238" stroke="#263a55"/>
+<rect x="764" y="250" width="5" height="22" rx="2" fill="#73a9ff"/>
+<text x="780" y="268" font-size="25" fill="#e8f0fb" font-weight="700">数据构建与训练</text>
+<text x="768" y="305" font-size="18" fill="#9db0cb" font-weight="400">多源合并 / 抽样 / YOLO 训练</text>
+<text x="768" y="334" font-size="16" fill="#73a9ff" font-weight="400">datasets.py + train scripts</text>
+<rect x="1090" y="228" width="298" height="126" rx="16" fill="#142238" stroke="#263a55"/>
+<rect x="1110" y="250" width="5" height="22" rx="2" fill="#73a9ff"/>
+<text x="1126" y="268" font-size="25" fill="#e8f0fb" font-weight="700">评测与记录</text>
+<text x="1114" y="305" font-size="18" fill="#9db0cb" font-weight="400">每类 AP / 重点类 / 基线差值</text>
+<text x="1114" y="334" font-size="16" fill="#73a9ff" font-weight="400">eval/ + metrics JSON</text>
+<path d="M355 291 L392 291" fill="none" stroke="#607b9f" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M701 291 L738 291" fill="none" stroke="#607b9f" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M1047 291 L1084 291" fill="none" stroke="#607b9f" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="52" y="410" font-size="16" fill="#54d6bd" font-weight="700">02  OFFLINE INFERENCE</text>
+<rect x="52" y="433" width="298" height="126" rx="16" fill="#142238" stroke="#263a55"/>
+<rect x="72" y="455" width="5" height="22" rx="2" fill="#54d6bd"/>
+<text x="88" y="473" font-size="25" fill="#e8f0fb" font-weight="700">有序图片序列</text>
+<text x="76" y="510" font-size="18" fill="#9db0cb" font-weight="400">单张图片或文件名排序的目录</text>
+<text x="76" y="539" font-size="16" fill="#54d6bd" font-weight="400">输入图像</text>
+<rect x="398" y="433" width="298" height="126" rx="16" fill="#142238" stroke="#263a55"/>
+<rect x="418" y="455" width="5" height="22" rx="2" fill="#54d6bd"/>
+<text x="434" y="473" font-size="25" fill="#e8f0fb" font-weight="700">YOLO + IoU 跟踪</text>
+<text x="422" y="510" font-size="18" fill="#9db0cb" font-weight="400">类别 / 置信度 / 检测框 / Track ID</text>
+<text x="422" y="539" font-size="16" fill="#54d6bd" font-weight="400">models/ + track/</text>
+<rect x="744" y="433" width="298" height="126" rx="16" fill="#142238" stroke="#263a55"/>
+<rect x="764" y="455" width="5" height="22" rx="2" fill="#54d6bd"/>
+<text x="780" y="473" font-size="25" fill="#e8f0fb" font-weight="700">基础事件规则</text>
+<text x="768" y="510" font-size="18" fill="#9db0cb" font-weight="400">目标发现 / 人员聚集 / 夜间逗留</text>
+<text x="768" y="539" font-size="16" fill="#54d6bd" font-weight="400">rules/</text>
+<rect x="1090" y="433" width="298" height="126" rx="16" fill="#142238" stroke="#263a55"/>
+<rect x="1110" y="455" width="5" height="22" rx="2" fill="#54d6bd"/>
+<text x="1126" y="473" font-size="25" fill="#e8f0fb" font-weight="700">JSON 结果</text>
+<text x="1114" y="510" font-size="18" fill="#9db0cb" font-weight="400">逐帧 FrameResult / 事件汇总</text>
+<text x="1114" y="539" font-size="16" fill="#54d6bd" font-weight="400">pipeline/</text>
+<path d="M355 496 L392 496" fill="none" stroke="#607b9f" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M701 496 L738 496" fill="none" stroke="#607b9f" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M1047 496 L1084 496" fill="none" stroke="#607b9f" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="52" y="610" width="1336" height="118" rx="16" fill="#101e33" stroke="#263a55"/>
+<text x="78" y="648" font-size="22" fill="#e8f0fb" font-weight="700">运行边界</text>
+<text x="78" y="682" font-size="21" fill="#9db0cb" font-weight="400">轻量标注环境与 GPU 服务隔离；数据、权重、密钥留在本地。</text>
+<text x="78" y="710" font-size="18" fill="#f5c56e" font-weight="400">ROS2 桥接与实时车端集成：规划中。图示为静态架构，不是实时运行监控。</text>
+</g>
+</svg>

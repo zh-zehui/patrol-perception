@@ -1,0 +1,21 @@
+name: 问题反馈
+description: 报告标注、数据处理或感知模块中的可复现问题
+body:
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境与版本
+      description: 提交号、操作系统、Python 版本；模型问题请补充设备与模型版本。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤与预期行为
+      description: 提供最小命令或界面操作；请使用合成样本，勿上传密钥或实采敏感数据。
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: 实际结果与脱敏日志

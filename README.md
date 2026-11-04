@@ -1,106 +1,115 @@
-# patrol_perception
+# Patrol Perception · 巡逻车视觉感知
 
-巡逻车视觉感知独立工程（YOLO26：告警 L1 / 巡检 L2 / 导航辅助 L3）。
+[![CI](https://github.com/zh-zehui/patrol-perception/actions/workflows/ci.yml/badge.svg)](https://github.com/zh-zehui/patrol-perception/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](docs/quickstart.md)
 
-本目录与 `d1_perception`（激光代价地图）、`d1_navigation`、`Pytorch/` **分离**，仅通过约定接口与外部环境协作：
+面向巡逻场景的视觉工程：**数据整理 → 模型辅助标注 → 人工审核 → YOLO 训练与评测 → 离线检测与事件输出**。
 
-| 外部依赖 | 用法 |
-| --- | --- |
-| Docker `d1-sim` + Gemini336 | 录包 / 出图（不在本仓库内改驱动） |
-| 主机 conda `pytorch_cu130` | 训练与离线推理 |
-| 设计文档 | `docs/superpowers/specs/2026-08-05-patrol-perception-yolo26-design.md` |
-| 实施计划 | `docs/superpowers/plans/2026-08-05-patrol-perception-yolo26.md` |
+轻量浏览器标注工具与 GPU 模型服务分开运行；代码、配置与评测摘要在仓库中管理，图片、模型权重和服务密钥保留在本地。
 
-## 目录结构（规划）
+![系统架构](docs/assets/architecture.svg)
+
+## 能展示什么
+
+| 模块 | 当前能力 | 入口 |
+| --- | --- | --- |
+| 标注门户 | 数据集登记、独立标注进程、模型配置与任务管理 | [annotation_tool](annotation_tool/README.md) |
+| 人工审核 | 检测框编辑、候选与草稿分层、历史备份、批量提交 | [本地演示](#五分钟启动标注演示无需-gpu) |
+| 辅助标注 | 视觉 API / 独立 SAM 3 服务生成候选，人工确认后提交 | [SAM 3 服务](annotation_tool/sam3_service/README.md) |
+| 数据工程 | 下载清单、类别映射、合并、负样本、统计、数据集构建 | [datasets](datasets/README.md) |
+| 检测评测 | 按类别 AP、重点类与底座类指标、基线差值、Markdown 报告 | [评测记录](docs/evaluation.md) |
+| 离线感知 | 图片序列检测、IoU 跟踪、基础发现 / 聚集 / 夜间逗留规则、JSON 输出 | [运行说明](docs/quickstart.md) |
+
+本仓库是研发与离线演示工程。ROS2 桥接、实时车端集成及部分高级事件仍待实现；`events_catalog.yaml` 中的 `ship/partial` 是配置声明，不能作为功能验收结论。当前规则范围见[系统状态](docs/status.md)。
+
+## 五分钟启动标注演示（无需 GPU）
+
+需要 Python 3.10+，在仓库根目录执行：
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ./annotation_tool
+python scripts/create_demo_dataset.py
+
+d1-annotate --dataset data/demo_dataset \
+  --classes annotation_tool/config/classes.yaml
+```
+
+打开 **<http://127.0.0.1:8765>**，即可编辑检测框、保存草稿、标记可提交并批量提交。演示脚本只生成几何图形样本，不使用实采图片、不下载权重、不调用外部 API。它用于体验操作流程，不能用于衡量模型精度。
+
+![实际标注界面：合成演示数据](docs/assets/annotation-demo.png)
+
+多数据集门户启动方式：
+
+```bash
+cp annotation_tool/config/datasets_registry.example.yaml \
+  annotation_tool/config/datasets_registry.yaml
+# 按需修改注册表中的数据集路径；演示条目默认为 data/demo_dataset。
+d1-annotate-portal \
+  --registry annotation_tool/config/datasets_registry.yaml \
+  --classes annotation_tool/config/classes.yaml \
+  --host 127.0.0.1
+```
+
+从根目录运行时，示例注册表可直接找到演示集。标注服务没有登录认证，默认示例仅供本机访问；多人部署请阅读[标注工具说明](annotation_tool/README.md)。
+
+## 系统状态与标注闭环
+
+![模块状态：按代码核对，非实时监控](docs/assets/system-status.svg)
+
+![标注状态流转](docs/assets/review-workflow.svg)
+
+模型结果先进入候选层，人工编辑产生草稿。批量提交只处理人工标记为 `draft_ready` 的图片，覆盖正式标签前自动保留历史。详见[状态与边界](docs/status.md)。
+
+数据集统计与构建界面见[演示截图](docs/assets/dataset-builder.png)，同样使用合成数据。
+
+## 已有评测结果
+
+以下为 **2026-08-18 的 W2 联合 14 类历史评测记录**，输入尺寸 640。数据集、权重与运行环境未随仓库发布；本次整理未重新运行 GPU 评测。
+
+| 划分 | mAP@50 | mAP@50:95 |
+| --- | ---: | ---: |
+| Validation | 65.71% | 45.50% |
+| Test | 65.44% | 45.14% |
+
+![W2 每类 AP50：历史记录](docs/assets/evaluation.png)
+
+指标来源、完整数值和复现限制见[评测说明](docs/evaluation.md)。这些是目标检测指标；事件级准确率、FPS 和车端实时性能尚未在此报告。
+
+## 开发与仓库管理
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest
+python scripts/check_publication.py
+```
+
+- Pull Request 自动执行 CPU 测试和公开内容检查，无需下载模型或配置 API Key。
+- 提供问题模板、功能建议模板、PR 模板及 Dependabot 更新配置。
+- 以 `main` 作为可展示分支，功能通过短分支和 PR 合入；发布时按 `v0.x.y` 标记可复现版本。
+- 具体维护约定见 [CONTRIBUTING.md](CONTRIBUTING.md)；初次上传和 GitHub 设置见[发布说明](docs/github-publishing.md)。
+
+## 目录导航
 
 ```text
-patrol_perception/
-├── README.md                 # 本文件
-├── datasets/                 # 数据集说明、公开集清单、转换笔记
-│   └── README.md             # Task 9 固定附件：公开数据集清单
-├── config/                   # classes / events / infer / zones（待 Task 1）
-├── schema/                   # FrameResult JSON Schema（待 Task 1）
-├── src/patrol_perception/    # Python 包（待实现）
-├── scripts/                  # 训练 / 抽帧 / 演示脚本
-├── tests/
-├── ros_bridge/               # 二期 ROS2 节点
-└── data/                     # 本地大数据（gitignore）：raw / weights / runs …
+annotation_tool/   浏览器标注、门户、候选服务与测试
+config/            类别、事件、数据源、合并任务与评测配置
+datasets/scripts/  数据下载、转换、合并、统计与预览
+src/patrol_perception/
+  models/          YOLO 检测适配器
+  track/           IoU 跟踪
+  rules/           已实现的基础事件规则
+  pipeline/        离线运行与 JSON 落盘
+  eval/            指标、基线比较与报告
+scripts/           演示、训练、评测与仓库检查
+docs/              架构、状态、运行说明与展示图片
+tests/             感知与数据工程测试
+.github/           CI、依赖更新和协作模板
 ```
 
-## 快速入口
+全局类别目录是能力规划全集，当前 W2 模型和标注默认使用 14 类；加载其他权重时以该权重及数据集的类别定义为准，不要直接套用不同顺序的类别 ID。
 
-- **公开数据冷启动**：见 [`datasets/README.md`](datasets/README.md)
-- **训练 / 评测脚本用法**：见 [`scripts/README.md`](scripts/README.md)（`train_detect_w1_fire.sh`、`eval_detect_run.py`、冒烟）
-- **环境**：`source /home/sribd/D1_EDU/Pytorch/switch_cuda_mode.sh 1`，使用 `pytorch_cu130`
-- **许可**：Ultralytics YOLO 为 AGPL-3.0；公开数据集各有许可，商用前务必核对
+## 数据与许可说明
 
-## 环境已就绪（2026-08-05）
-
-| 项 | 值 |
-| --- | --- |
-| conda | `pytorch_cu130` |
-| torch | **2.10.0**（未改动；安装 ultralytics 时用了 `--no-deps`） |
-| ultralytics | **8.4.115**（≥8.3.0，满足 YOLO26） |
-| CUDA | 可用（`torch.cuda.is_available() == True`） |
-| 预训练权重 | `data/weights/yolo26{n,s,m,l,x}.pt` |
-
-安装要点（复现）：
-
-```bash
-source /home/sribd/D1_EDU/Pytorch/switch_cuda_mode.sh 1
-pip install -U "ultralytics>=8.3.0" --no-deps   # 避免覆盖 Jetson 专用 torch
-# 再装 ultralytics 运行依赖（勿升级 torch）：
-pip install pyyaml opencv-python-headless requests matplotlib scipy pandas seaborn psutil polars "ultralytics-thop>=2.0.18" "nvidia-ml-py>=12.0.0"
-```
-
-冒烟测试（GPU，bus 图）：
-
-```bash
-cd /home/sribd/D1_EDU/patrol_perception
-source /home/sribd/D1_EDU/Pytorch/switch_cuda_mode.sh 1
-python scripts/smoke_yolo26_weights.py --sizes n,s   # 或 n,s,m,l,x
-```
-
-实测：`yolo26n/s/m/l/x` 均加载并推理成功；预览图见 `data/weights/smoke_bus_yolo26n.jpg`、`smoke_bus_yolo26s.jpg`。工程默认后续训练/部署用 **yolo26s**。
-
-## 训后评测（Detect Eval）
-
-完整参数与产物说明见 **[`scripts/README.md`](scripts/README.md)**。下面为最短示例。
-
-每波微调（W1 烟火、…）训完后，用统一 CLI 在 val（+test）上出标准指标，并可选对基线权重算遗忘相关的 ΔAP。详见设计文档 [`docs/superpowers/specs/2026-08-11-detect-eval-framework-design.md`](../docs/superpowers/specs/2026-08-11-detect-eval-framework-design.md)。
-
-**环境（必需）**：与训练/推理一致，先激活 CUDA 模式，否则 `import ultralytics/torch` 会报 `ImportError: libnvpl_lapack...`：
-
-```bash
-source /home/sribd/D1_EDU/Pytorch/switch_cuda_mode.sh 1
-cd /home/sribd/D1_EDU/patrol_perception
-```
-
-**真实评测**（val 必跑；data.yaml 含 test 则自动追加）：
-
-```bash
-PYTHONPATH=src python scripts/eval_detect_run.py \
-  --weights data/weights/detect_w1.pt \
-  --data /path/to/detect_w1_fire/data.yaml \
-  --wave w1_fire \
-  --config config/eval.yaml
-```
-
-**大 val 集冒烟/快速评测**：Ultralytics 的 `fraction` 仅对 `train` 生效，对 `val`/`test` 是 no-op；集内 val 达数千张图时用 `--max-images N` 做等间隔抽样子集（临时 `.txt` 图片列表，不改动源数据集）：
-
-```bash
-PYTHONPATH=src python scripts/eval_detect_run.py \
-  --weights data/weights/yolo26l.pt \
-  --data /path/to/detect_w1_fire/data.yaml \
-  --wave w1_fire_smoke_cli \
-  --baseline data/weights/yolo26l.pt \
-  --max-images 400
-```
-
-**无 GPU 冒烟**（只测编排/落盘/index，不跑推理）：`--dry-metrics-json path/to/fake_metrics.json`（见 `scripts/eval_detect_run.py --help` 中的 JSON 结构说明）。
-
-产物：`data/eval_runs/<wave>_<timestamp>/{run_meta.json, metrics_val.json, metrics_test.json, metrics_baseline_val.json, baseline_delta.json, report.md}`，并追加一行到 `data/eval_runs/index.jsonl`。
-
-## 状态
-
-环境与 YOLO26 基础权重冒烟已完成；业务代码按实施计划 Task 1 起实现；检测评测框架（`eval/` + `scripts/eval_detect_run.py`）已完成并冒烟通过。
+仓库不分发模型权重、实采图片或第三方数据集。第三方代码、模型与数据的使用条件见其上游项目；当前仓库尚未指定独立开源许可证，公开展示不等于授予再分发或商用许可。

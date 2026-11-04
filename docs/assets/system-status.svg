@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="660" viewBox="0 0 1440 660" role="img" aria-labelledby="title desc">
+<title id="title">系统模块状态</title><desc id="desc">五个模块具备代码实现；ROS2 集成为规划项；状态不等于部署验收</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#607b9f"/></marker></defs>
+<rect width="1440" height="660" rx="24" fill="#0b1425"/>
+<g font-family="Inter, Noto Sans CJK SC, Microsoft YaHei, sans-serif">
+<text x="52" y="53" font-size="17" fill="#54d6bd" font-weight="700">ENGINEERING STATUS / STATIC SNAPSHOT</text>
+<text x="52" y="108" font-size="38" fill="#e8f0fb" font-weight="700">系统能力与实现边界</text>
+<text x="52" y="146" font-size="22" fill="#9db0cb" font-weight="400">按仓库代码核对 · 模型服务与现场表现需单独验证</text>
+<rect x="52" y="190" width="432" height="166" rx="16" fill="#142238" stroke="#263a55"/>
+<text x="76" y="233" font-size="25" fill="#e8f0fb" font-weight="700">数据工程</text>
+<text x="76" y="270" font-size="19" fill="#9db0cb" font-weight="400">转换 · 类别映射 · 合并 · 统计</text>
+<circle cx="82" cy="315" r="5" fill="#54d6bd"/>
+<text x="98" y="322" font-size="20" fill="#54d6bd" font-weight="400">已有实现</text>
+<rect x="504" y="190" width="432" height="166" rx="16" fill="#142238" stroke="#263a55"/>
+<text x="528" y="233" font-size="25" fill="#e8f0fb" font-weight="700">标注与审核</text>
+<text x="528" y="270" font-size="19" fill="#9db0cb" font-weight="400">门户 · 草稿 · 历史 · 批量提交</text>
+<circle cx="534" cy="315" r="5" fill="#54d6bd"/>
+<text x="550" y="322" font-size="20" fill="#54d6bd" font-weight="400">已有实现</text>
+<rect x="956" y="190" width="432" height="166" rx="16" fill="#142238" stroke="#263a55"/>
+<text x="980" y="233" font-size="25" fill="#e8f0fb" font-weight="700">辅助标注适配</text>
+<text x="980" y="270" font-size="19" fill="#9db0cb" font-weight="400">视觉 API / SAM 3 独立服务</text>
+<circle cx="986" cy="315" r="5" fill="#73a9ff"/>
+<text x="1002" y="322" font-size="20" fill="#73a9ff" font-weight="400">服务需配置</text>
+<rect x="52" y="380" width="432" height="166" rx="16" fill="#142238" stroke="#263a55"/>
+<text x="76" y="423" font-size="25" fill="#e8f0fb" font-weight="700">离线感知</text>
+<text x="76" y="460" font-size="19" fill="#9db0cb" font-weight="400">图片检测 · IoU 跟踪 · 基础规则</text>
+<circle cx="82" cy="505" r="5" fill="#54d6bd"/>
+<text x="98" y="512" font-size="20" fill="#54d6bd" font-weight="400">已有实现</text>
+<rect x="504" y="380" width="432" height="166" rx="16" fill="#142238" stroke="#263a55"/>
+<text x="528" y="423" font-size="25" fill="#e8f0fb" font-weight="700">检测评测</text>
+<text x="528" y="460" font-size="19" fill="#9db0cb" font-weight="400">按类指标 · 基线比较 · 报告</text>
+<circle cx="534" cy="505" r="5" fill="#73a9ff"/>
+<text x="550" y="512" font-size="20" fill="#73a9ff" font-weight="400">已有历史记录</text>
+<rect x="956" y="380" width="432" height="166" rx="16" fill="#142238" stroke="#263a55"/>
+<text x="980" y="423" font-size="25" fill="#e8f0fb" font-weight="700">ROS2 与实时集成</text>
+<text x="980" y="460" font-size="19" fill="#9db0cb" font-weight="400">桥接节点 · 车端连续运行验证</text>
+<circle cx="986" cy="505" r="5" fill="#f5c56e"/>
+<text x="1002" y="512" font-size="20" fill="#f5c56e" font-weight="400">规划中</text>
+<text x="52" y="610" font-size="19" fill="#9db0cb" font-weight="400">事件目录中的 ship / partial 是配置声明；当前高级多模态事件未完整接入离线管线。</text>
+</g>
+</svg>

@@ -1,0 +1,34 @@
+{
+  "run_id": "w2_joint_20260818_171719",
+  "recorded_at": "2026-08-18T17:37:40.839562+00:00",
+  "wave": "w2_joint",
+  "imgsz": 640,
+  "names": [
+    "person",
+    "bicycle",
+    "car",
+    "truck",
+    "smoke",
+    "flame",
+    "ebike",
+    "litter_bottle",
+    "litter_plastic_bag",
+    "litter_paper",
+    "litter_cardboard",
+    "fishing_rod",
+    "cigarette_or_smoke",
+    "pet"
+  ],
+  "weights_description": "W2 joint training best.pt; not distributed",
+  "dataset_description": "detect_w1_fire joint dataset with W2 classes; not distributed",
+  "metrics_sha256": {
+    "metrics_val.json": "3e1e75f821595971bd9b3f15ac41d6ae5c2e1f1376f3a16d488689ab01a611f0",
+    "metrics_test.json": "f2e4ec61120fda2a2572d0c9a77422888fc09d1ac68e85be85fa49fb28986336"
+  },
+  "limitations": [
+    "Historical records, not rerun for publication",
+    "Original absolute paths omitted",
+    "Dataset and checkpoint hashes and sample counts not recorded in the archived metadata",
+    "No published GPU latency or event-level accuracy"
+  ]
+}

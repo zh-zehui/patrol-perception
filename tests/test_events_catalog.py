@@ -39,8 +39,10 @@ def test_dataset_sources_urls_and_dirs():
     src = load_dataset_sources(ROOT / "config/dataset_sources.yaml")
     pubs = iter_enabled_public(src, "smoke")
     assert pubs and pubs[0]["url"].startswith("http")
-    selves = iter_enabled_self(src, "leash")
+    # The template documents a local source but leaves absent datasets disabled.
+    selves = src["classes"]["leash"]["self"]
     assert selves and selves[0]["dir"]
+    assert iter_enabled_self(src, "leash") == [s for s in selves if s.get("enabled")]
 
 
 def test_self_dir_override():

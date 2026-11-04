@@ -83,7 +83,7 @@ def test_relay_provider_configuration_and_request_flags(tmp_path, monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "test-not-a-real-key")
     provider = OpenAIVisionProvider()
     captured = []
-    provider._request = lambda payload: captured.append(payload) or {
+    provider._request = lambda payload, endpoint: captured.append(payload) or {
         "output": [{"content": [{"type": "output_text", "text":
             '{"detections":[{"class_id":13,"x_min":100,"y_min":200,'
             '"x_max":500,"y_max":800,"confidence":0.8,"evidence":"dog"}]}'
@@ -138,7 +138,7 @@ def test_sam3_service_provider_converts_pixel_boxes(tmp_path, monkeypatch):
         "evidence": "dog",
         "source": "sam3-local",
     }]
-    catalog = provider_catalog()
+    catalog = provider_catalog(settings_dir=tmp_path / "settings")
     assert [item["id"] for item in catalog] == ["openai", "sam3"]
     assert catalog[1]["configured"] is True
 
@@ -149,10 +149,10 @@ def test_relay_envelope_and_validation_errors_are_actionable(tmp_path, monkeypat
     provider = OpenAIVisionProvider(api_key="test", base_url="http://relay.example/v1")
     image = tmp_path / "sample.jpg"
     Image.new("RGB", (32, 32), "white").save(image)
-    provider._request = lambda payload: {"output_text": "not json"}
+    provider._request = lambda payload, endpoint: {"output_text": "not json"}
     with pytest.raises(AutoLabelError, match="没有返回有效 JSON"):
         provider.predict(image, load_classes(CLASSES))
-    provider._request = lambda payload: {"output_text": '{"detections":[{"class_id":99}]}' }
+    provider._request = lambda payload, endpoint: {"output_text": '{"detections":[{"class_id":99}]}' }
     with pytest.raises(AutoLabelError, match="class_id"):
         provider.predict(image, load_classes(CLASSES))
 
@@ -175,7 +175,7 @@ def test_detection_coordinate_aliases_are_normalized(tmp_path, monkeypatch):
     provider = OpenAIVisionProvider(api_key="test", base_url="http://relay.example/v1")
     image = tmp_path / "sample.jpg"
     Image.new("RGB", (32, 32), "white").save(image)
-    provider._request = lambda payload: {"output_text": '{"detections": ['
+    provider._request = lambda payload, endpoint: {"output_text": '{"detections": ['
         '{"class_name":"bottle","bbox":[100,200,500,800],"score":0.7}'
         ']}' }
     boxes = provider.predict(image, load_classes(CLASSES))
@@ -191,7 +191,7 @@ def test_center_size_coordinates_are_normalized(tmp_path):
     provider = OpenAIVisionProvider(api_key="test", base_url="http://relay.example/v1")
     image = tmp_path / "sample.jpg"
     Image.new("RGB", (32, 32), "white").save(image)
-    provider._request = lambda payload: {"output_text": '{"detections": ['
+    provider._request = lambda payload, endpoint: {"output_text": '{"detections": ['
         '{"class":"pet","x":500,"y":500,"width":200,"height":400}'
         ']}' }
     boxes = provider.predict(image, load_classes(CLASSES))
@@ -205,13 +205,13 @@ def test_normalized_xyxy_and_unknown_coordinate_message(tmp_path):
     provider = OpenAIVisionProvider(api_key="test", base_url="http://relay.example/v1")
     image = tmp_path / "sample.jpg"
     Image.new("RGB", (32, 32), "white").save(image)
-    provider._request = lambda payload: {"output_text": '{"detections": ['
+    provider._request = lambda payload, endpoint: {"output_text": '{"detections": ['
         '{"label":"pet","xmin":0.1,"ymin":0.2,"xmax":0.5,"ymax":0.8}'
         ']}' }
     box = provider.predict(image, load_classes(CLASSES))[0]
     assert box["width"] == .4
     assert box["height"] == .6
-    provider._request = lambda payload: {"output_text": '{"detections": [{"label":"pet","polygon":[]}]}' }
+    provider._request = lambda payload, endpoint: {"output_text": '{"detections": [{"label":"pet","polygon":[]}]}' }
     with pytest.raises(AutoLabelError, match="实际字段为：label, polygon"):
         provider.predict(image, load_classes(CLASSES))
 

@@ -1,15 +1,9 @@
+# Paths resolve against the process working directory; start from repository root.
 version: 1
 datasets:
-  - id: detect_w1_fire
-    name: detect_w1_fire 公开基础数据
-    path: /media/sribd/C02E01372E01284C/patrol_perception/datasets/detect_w1_fire
-    source_type: public
-    read_only: true
-    exhaustive_classes: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-
-  # - id: trash_field_20260813
-  #   name: 实采垃圾 20260813
-  #   path: /media/sribd/C02E01372E01284C/patrol_perception/datasets/downloads/yolo_dataset_export_20260813/01_trash_manual_reviewed_yolo_738_images
-  #   source_type: self_collected
-  #   read_only: false
-  #   exhaustive_classes: [7, 8, 9, 10]
+  - id: demo
+    name: Synthetic review demo
+    path: data/demo_dataset
+    source_type: self_collected
+    read_only: false
+    exhaustive_classes: [0, 2, 7]
