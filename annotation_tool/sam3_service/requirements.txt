@@ -1,6 +1,6 @@
 fastapi>=0.115,<1
 uvicorn>=0.34,<1
-python-multipart>=0.0.20,<1
+python-multipart>=0.0.32,<1
 Pillow>=10,<12
 setuptools<81
 einops>=0.8,<1
