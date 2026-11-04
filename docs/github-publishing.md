@@ -20,7 +20,7 @@ cd patrol-perception
 | 强推与删除 | `main` 禁止强推和删除，规则同样约束管理员 |
 | 合并方式 | Squash merge；合并后自动删除功能分支 |
 | 人工审批 | 当前为单维护者，不强制另一名审核者批准；`CODEOWNERS` 指向 `zh-zehui` |
-| 依赖管理 | Dependabot 月度更新 GitHub Actions 与 Python 依赖 |
+| 依赖管理 | Dependabot 月度更新 Actions 与 CPU 依赖；保留兼容版本下限，排除 SAM 3 / GPU 服务 |
 | 密钥保护 | GitHub Secret scanning 与 push protection 已启用 |
 | 协作模板 | 问题、功能建议与 PR 模板已提交 |
 
