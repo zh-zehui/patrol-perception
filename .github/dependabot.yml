@@ -5,11 +5,20 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns: ['*']
   - package-ecosystem: pip
     directory: /
     schedule:
       interval: monthly
     open-pull-requests-limit: 3
+    versioning-strategy: increase-if-necessary
+    exclude-paths:
+      - annotation_tool/**
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     groups:
       development:
         patterns: ['*']
@@ -18,3 +27,13 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 3
+    versioning-strategy: increase-if-necessary
+    # GPU service versions are verified on target hardware, outside CPU CI.
+    exclude-paths:
+      - sam3_service/**
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+    groups:
+      annotation:
+        patterns: ['*']
